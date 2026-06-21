@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Manager 1:1</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="icon" type="image/x-icon" href="/scooters/dashboard/favicon.ico">
+    <link rel="stylesheet" href="/scooters/forms/styles.css?v=3">
+</head>
+<body>
+<div class="form-container">
+    <div class="form-header">
+        <img src="/images/ScooterLogo.png" alt="Scooter's Logo" class="logo">
+        <h1>Monthly Manager 1:1</h1>
+        <p>Documented weekly performance checking with management.</p>
+    </div>
+    <div class="form-content">
+        <form id="monthlyForm">
+
+            <div class="form-section">
+                <h2 class="section-title">Employee Information</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="location">Location <span class="required">*</span></label>
+                        <select id="location" required disabled><option value="">Loading...</option></select>
+                        <input type="hidden" id="locationHidden" name="location">
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Date <span class="required">*</span></label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="employee">Employee Name <span class="required">*</span></label>
+                        <select id="employee" name="employee" required><option value="">Select employee...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="supervisor">Supervisor Name <span class="required">*</span></label>
+                        <select id="supervisor" name="supervisor" required><option value="">Select supervisor...</option></select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">Operations</h2>
+                <div class="form-group">
+                    <label for="cogsLabor">COGS / Labor / Controllables</label>
+                    <textarea id="cogsLabor" name="cogsLabor" rows="3" placeholder="Notes..."></textarea>
+                </div>
+                <div class="form-group" >
+                    <label for="ticketTimes">Ticket Times / Workflow</label>
+                    <textarea id="ticketTimes" name="ticketTimes" rows="3" placeholder="Notes..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="waste">Waste / PAR Levels</label>
+                    <textarea id="waste" name="waste" rows="3" placeholder="Notes..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="inventory">Inventory / Ordering</label>
+                    <textarea id="inventory" name="inventory" rows="3" placeholder="Notes..."></textarea>
+                </div>
+                <div class="yes-no-group">
+                    <div class="yes-no-question"><label>Line Scooting</label></div>
+                    <div style="display:flex;gap:24px;margin-top:8px;align-items:center;">
+                        <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:14px;cursor:pointer;">
+                            <input type="radio" name="lineScooting" value="Yes" style="width:auto;"> Yes
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:14px;cursor:pointer;">
+                            <input type="radio" name="lineScooting" value="No" style="width:auto;"> No
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">Staffing & Development</h2>
+                <div class="form-group">
+                    <label for="staffingLevels">Staffing Levels / Gaps</label>
+                    <textarea id="staffingLevels" name="staffingLevels" rows="3" placeholder="Notes..."></textarea>
+                </div>
+                <div class="form-group" style="width:100%">
+                    <label for="training">Training (Scooterversity / New Hires)</label>
+                    <textarea id="training" name="training" rows="3" placeholder="Notes..."></textarea>
+                </div>
+                <div class="form-group" style="width:100%">
+                    <label for="performanceCoaching">Performance / Coaching</label>
+                    <textarea id="performanceCoaching" name="performanceCoaching" rows="3" placeholder="Notes..."></textarea>
+                </div>
+                <div class="form-group" style="width:100%">
+                    <label for="leadershipDev">Leadership Development</label>
+                    <textarea id="leadershipDev" name="leadershipDev" rows="3" placeholder="Notes..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">Customer Experience</h2>
+                <div class="form-group" style="width:100%">
+                    <label for="reviewsFeedback">Reviews / Feedback</label>
+                    <textarea id="reviewsFeedback" name="reviewsFeedback" rows="3" placeholder="Notes..."></textarea>
+                </div>
+                <div class="form-group" style="width:100%">
+                    <label for="superfan">Superfan Opportunities</label>
+                    <textarea id="superfan" name="superfan" rows="3" placeholder="Notes..."></textarea>
+                </div>
+                <div class="form-group" style="width:100%">
+                    <label for="cleanliness">Cleanliness / Building Issues</label>
+                    <textarea id="cleanliness" name="cleanliness" rows="3" placeholder="Notes..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">Sales & Marketing</h2>
+                <div class="form-group" style="width:100%">
+                    <label for="upselling">Upselling (Goal 1.8–2) — Current</label>
+                    <textarea id="upselling" name="upselling" rows="3" placeholder="Current upselling performance..."></textarea>
+                </div>
+                <div class="form-group" style="width:100%">
+                    <label for="socialMedia">Social Media</label>
+                    <textarea id="socialMedia" name="socialMedia" rows="3" placeholder="Notes..."></textarea>
+                </div>
+                <div class="form-group" style="width:100%">
+                    <label for="campaigns">Campaigns / Events / Local Outreach</label>
+                    <textarea id="campaigns" name="campaigns" rows="3" placeholder="Notes..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">Goals & Strategy</h2>
+                <div class="form-group" style="width:100%">
+                    <label for="progressMade">Progress Made <span class="required">*</span></label>
+                    <textarea id="progressMade" name="progressMade" rows="3" placeholder="Progress made this month..." required></textarea>
+                </div>
+                <div class="form-group" style="width:100%">
+                    <label for="barriers">Barriers / What's Not Working <span class="required">*</span></label>
+                    <textarea id="barriers" name="barriers" rows="3" placeholder="Barriers and challenges..." required></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">Action Plan</h2>
+                <div class="form-group">
+                    <label for="decisionsToday">Decisions Today <span class="required">*</span></label>
+                    <textarea id="decisionsToday" name="decisionsToday" rows="3" placeholder="Decisions made today..." required></textarea>
+                </div>
+                <div class="form-group" >
+                    <label for="nextMonthPriorities">Next-Month Priorities <span class="required">*</span></label>
+                    <textarea id="nextMonthPriorities" name="nextMonthPriorities" rows="3" placeholder="Priorities for next month..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="supportNeeded">Support Needed <span class="required">*</span></label>
+                    <textarea id="supportNeeded" name="supportNeeded" rows="3" placeholder="What support is needed..." required></textarea>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="reset" class="btn-reset">Clear Form</button>
+                <button type="submit" class="btn-submit" id="submitBtn">Submit</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+const FORM_TYPE  = 'monthly-one-on-one';
+const FORM_TITLE = 'Monthly Manager 1 on 1';
+let currentLocation = '';
+
+async function loadEmployees(location, currentUserName = "", loggedInUser = null) {
+    const empSelect = document.getElementById('employee');
+    if (empSelect) empSelect.innerHTML = '<option value="">Loading employees...</option>';
+    try {
+        const res = await fetch('/api/employees', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch');
+        let employees = await res.json();
+        const allEmployees = employees;
+        if (location) employees = employees.filter(e => e.location === location);
+        const active = employees.filter(e =>
+            (e.status === 'Active' || e.status === 'active') &&
+            ['Manager', 'Assistant Manager'].includes(e.title)
+        );
+        const userTitle = loggedInUser ? (loggedInUser.title || loggedInUser.role || 'manager') : '';
+        let allowedSupervisorTitles;
+        if (['Owner', 'owner'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Owner', 'General Manager', 'Manager', 'Assistant Manager'];
+        } else if (['General Manager', 'general manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['General Manager', 'Manager', 'Assistant Manager'];
+        } else if (['Manager', 'manager', 'Store Manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Manager', 'Store Manager'];
+        } else if (['Assistant Manager', 'assistant manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Assistant Manager'];
+        } else {
+            allowedSupervisorTitles = ['General Manager', 'Manager', 'Assistant Manager'];
+        }
+        // Owner and General Manager show regardless of location; Manager/Assistant Manager are location-scoped
+        const locationExemptTitles = ['owner', 'general manager'];
+        let supervisors = allEmployees.filter(e =>
+            allowedSupervisorTitles.some(t => t.toLowerCase() === (e.title||'').toLowerCase()) &&
+            (e.status === 'Active' || e.status === 'active') &&
+            (locationExemptTitles.includes((e.title||'').toLowerCase()) || !location || e.location === location) &&
+            !['Shilo', 'Hernan'].some(n => e.name.startsWith(n))
+        );
+        if (loggedInUser && loggedInUser.name) {
+            const empRecord = allEmployees.find(e => e.name === loggedInUser.name);
+            const empTitle = empRecord ? empRecord.title : userTitle;
+            if (empTitle && allowedSupervisorTitles.some(t => t.toLowerCase() === empTitle.toLowerCase())) {
+                const alreadyIn = supervisors.some(s => s.name === loggedInUser.name);
+                if (!alreadyIn) {
+                    supervisors = [{ name: loggedInUser.name, title: empTitle }, ...supervisors];
+                }
+            }
+        }
+        const supSelect = document.getElementById('supervisor');
+        if (supSelect) {
+            const currentSup = supSelect.value;
+            supSelect.innerHTML = '<option value="">Select supervisor...</option>' +
+                supervisors.map(e => `<option value="${e.name}">${e.name} (${e.title})</option>`).join('');
+            if (currentSup) supSelect.value = currentSup;
+        }
+        if (empSelect) {
+            empSelect.innerHTML = active.length
+                ? '<option value="">Select employee...</option>' +
+                  active.filter(e => !currentUserName || e.name !== currentUserName).map(e => `<option value="${e.name}">${e.name} — ${e.title}</option>`).join('')
+                : '<option value="">No managers found</option>';
+        }
+    } catch(err) {
+        console.error('Error loading employees:', err);
+        if (empSelect) empSelect.innerHTML = '<option value="">Could not load employees</option>';
+    }
+}
+
+(async () => {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    try {
+        const response = await fetch('/auth/current-user', { credentials: 'include' });
+        if (!response.ok) { window.location.href = '/'; return; }
+        const userData = await response.json();
+        const locationSelect = document.getElementById('location');
+        const locationHidden = document.getElementById('locationHidden');
+        if (userData.is_admin || userData.is_super_admin) {
+            locationSelect.disabled = false;
+            locationSelect.innerHTML = `
+                <option value="">Select location...</option>
+                <option value="Iowa Falls">Iowa Falls</option>
+                <option value="Webster City">Webster City</option>
+                <option value="Elkhorn">Elkhorn</option>`;
+            locationSelect.addEventListener('change', function() {
+                locationHidden.value = this.value;
+                currentLocation = this.value;
+                loadEmployees(currentLocation, userData.name || '', userData);
+            });
+        } else {
+            currentLocation = userData.location || '';
+            locationSelect.disabled = true;
+            locationSelect.innerHTML = `<option value="${currentLocation}">${currentLocation}</option>`;
+            locationHidden.value = currentLocation;
+        }
+        await loadEmployees(currentLocation, userData.name || '', userData);
+    } catch(error) {
+        console.error('Error loading user data:', error);
+    }
+})();
+
+document.getElementById('monthlyForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+    const lineScooting = document.querySelector('input[name="lineScooting"]:checked');
+    const data = {
+        location:            document.getElementById('locationHidden').value,
+        date:                document.getElementById('date').value,
+        employee:            document.getElementById('employee').value,
+        supervisor:          document.getElementById('supervisor').value,
+        cogsLabor:           document.getElementById('cogsLabor').value,
+        ticketTimes:         document.getElementById('ticketTimes').value,
+        waste:               document.getElementById('waste').value,
+        inventory:           document.getElementById('inventory').value,
+        lineScooting:        lineScooting ? lineScooting.value : '',
+        staffingLevels:      document.getElementById('staffingLevels').value,
+        training:            document.getElementById('training').value,
+        performanceCoaching: document.getElementById('performanceCoaching').value,
+        leadershipDev:       document.getElementById('leadershipDev').value,
+        reviewsFeedback:     document.getElementById('reviewsFeedback').value,
+        superfan:            document.getElementById('superfan').value,
+        cleanliness:         document.getElementById('cleanliness').value,
+        upselling:           document.getElementById('upselling').value,
+        socialMedia:         document.getElementById('socialMedia').value,
+        campaigns:           document.getElementById('campaigns').value,
+        progressMade:        document.getElementById('progressMade').value,
+        barriers:            document.getElementById('barriers').value,
+        decisionsToday:      document.getElementById('decisionsToday').value,
+        nextMonthPriorities: document.getElementById('nextMonthPriorities').value,
+        supportNeeded:       document.getElementById('supportNeeded').value,
+    };
+    try {
+        const res = await fetch('/api/forms/submit', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ form_type: FORM_TYPE, form_title: FORM_TITLE, employee_name: data.employee || '', location: data.location || '', form_data: data })
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            alert('Error: ' + (err.error || 'Submission failed'));
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit';
+            return;
+        }
+        const popup = document.createElement('div');
+        popup.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+        popup.innerHTML = `<div style="background:#fff;border-radius:12px;padding:40px;text-align:center;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.2)"><div style="width:56px;height:56px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><div style="font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:8px">Form Submitted!</div><div style="font-size:14px;color:#6b7280">Your form has been submitted successfully. This page will close in 5 seconds.</div></div>`;
+        document.body.appendChild(popup);
+        setTimeout(() => { window.close(); }, 5000);
+    } catch(err) {
+        console.error('Submit error:', err);
+        alert('Submission failed. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Manager 1:1</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="icon" type="image/x-icon" href="/scooters/dashboard/favicon.ico">
+    <link rel="stylesheet" href="/scooters/forms/styles.css?v=3">
+</head>
+<body>
+<div class="form-container">
+    <div class="form-header">
+        <img src="/images/ScooterLogo.png" alt="Scooter's Logo" class="logo">
+        <h1>Weekly Manager 1:1</h1>
+        <p>Documented weekly performance checking with management.</p>
+    </div>
+    <div class="form-content">
+        <form id="oneOnOneForm">
+
+            <!-- Employee Information Section -->
+            <div class="form-section">
+                <h2 class="section-title">Employee Information</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="location">Location <span class="required">*</span></label>
+                        <select id="location" required disabled>
+                            <option value="">Loading...</option>
+                        </select>
+                        <input type="hidden" id="locationHidden" name="location">
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Date <span class="required">*</span></label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="employee">Employee Name <span class="required">*</span></label>
+                        <select id="employee" name="employee" required>
+                            <option value="">Select employee...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="supervisor">Supervisor Name <span class="required">*</span></label>
+                        <select id="supervisor" name="supervisor" required>
+                            <option value="">Select supervisor...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="form-section">
+                <h2 class="section-title">Summary</h2>
+                <div class="form-row single">
+                    <div class="form-group">
+                        <label for="summary">Summary of Conversation <span class="required">*</span></label>
+                        <textarea id="summary" name="summary" rows="8" placeholder="Provide details of the 1 on 1 conversation..." required style="width:100%"></textarea>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="button-group">
+                <button type="reset" class="btn-reset">Clear Form</button>
+                <button type="submit" class="btn-submit" id="submitBtn">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const FORM_TYPE  = 'weekly-one-on-one';
+const FORM_TITLE = 'Weekly Manager 1:1';
+let currentLocation = '';
+
+async function loadEmployees(location, currentUserName = "", loggedInUser = null) {
+    const empSelect = document.getElementById('employee');
+    if (empSelect) empSelect.innerHTML = '<option value="">Loading employees...</option>';
+    try {
+        const res = await fetch('/api/employees', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch');
+        let employees = await res.json();
+        const allEmployees = employees;
+        if (location) employees = employees.filter(e => e.location === location);
+        const active = employees.filter(e =>
+            (e.status === 'Active' || e.status === 'active') &&
+            ['Manager', 'Assistant Manager'].includes(e.title)
+        );
+
+        const userTitle = loggedInUser ? (loggedInUser.title || loggedInUser.role || 'manager') : '';
+        let allowedSupervisorTitles;
+        if (['Owner', 'owner'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Owner', 'General Manager', 'Manager', 'Assistant Manager'];
+        } else if (['General Manager', 'general manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['General Manager', 'Manager', 'Assistant Manager'];
+        } else if (['Manager', 'manager', 'Store Manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Manager', 'Store Manager'];
+        } else if (['Assistant Manager', 'assistant manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Assistant Manager'];
+        } else {
+            allowedSupervisorTitles = ['General Manager', 'Manager', 'Assistant Manager'];
+        }
+        // Owner and General Manager show regardless of location; Manager/Assistant Manager are location-scoped
+        const locationExemptTitles = ['owner', 'general manager'];
+        let supervisors = allEmployees.filter(e =>
+            allowedSupervisorTitles.some(t => t.toLowerCase() === (e.title||'').toLowerCase()) &&
+            (e.status === 'Active' || e.status === 'active') &&
+            (locationExemptTitles.includes((e.title||'').toLowerCase()) || !location || e.location === location) &&
+            !['Shilo', 'Hernan'].some(n => e.name.startsWith(n))
+        );
+        if (loggedInUser && loggedInUser.name) {
+            const empRecord = allEmployees.find(e => e.name === loggedInUser.name);
+            const empTitle = empRecord ? empRecord.title : userTitle;
+            if (empTitle && allowedSupervisorTitles.some(t => t.toLowerCase() === empTitle.toLowerCase())) {
+                const alreadyIn = supervisors.some(s => s.name === loggedInUser.name);
+                if (!alreadyIn) {
+                    supervisors = [{ name: loggedInUser.name, title: empTitle }, ...supervisors];
+                }
+            }
+        }
+        const supSelect = document.getElementById('supervisor');
+        if (supSelect) {
+            const currentSup = supSelect.value;
+            supSelect.innerHTML = '<option value="">Select supervisor...</option>' +
+                supervisors.map(e => `<option value="${e.name}">${e.name} (${e.title})</option>`).join('');
+            if (currentSup) supSelect.value = currentSup;
+        }
+
+        if (empSelect) {
+            empSelect.innerHTML = active.length
+                ? '<option value="">Select employee...</option>' +
+                  active.filter(e => !currentUserName || e.name !== currentUserName).map(e => `<option value="${e.name}">${e.name} — ${e.title}</option>`).join('')
+                : '<option value="">No employees found</option>';
+        }
+    } catch(err) {
+        console.error('Error loading employees:', err);
+        if (empSelect) empSelect.innerHTML = '<option value="">Could not load employees</option>';
+    }
+}
+
+// Load user data and set location
+(async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+    try {
+        const response = await fetch('/auth/current-user', { credentials: 'include' });
+        if (!response.ok) { window.location.href = '/'; return; }
+        const userData = await response.json();
+        const locationSelect = document.getElementById('location');
+        const locationHidden = document.getElementById('locationHidden');
+
+        if (userData.is_admin || userData.is_super_admin) {
+            locationSelect.disabled = false;
+            locationSelect.innerHTML = `
+                <option value="">Select location...</option>
+                <option value="Iowa Falls">Iowa Falls</option>
+                <option value="Webster City">Webster City</option>
+                <option value="Elkhorn">Elkhorn</option>
+            `;
+            locationSelect.addEventListener('change', function() {
+                locationHidden.value = this.value;
+                currentLocation = this.value;
+                loadEmployees(currentLocation, userData.name || '', userData);
+            });
+        } else {
+            currentLocation = userData.location || '';
+            locationSelect.disabled = true;
+            locationSelect.innerHTML = `<option value="${currentLocation}">${currentLocation}</option>`;
+            locationHidden.value = currentLocation;
+        }
+        await loadEmployees(currentLocation, userData.name || '', userData);
+    } catch(error) {
+        console.error('Error loading user data:', error);
+        const locationSelect = document.getElementById('location');
+        locationSelect.disabled = false;
+        locationSelect.innerHTML = `
+            <option value="">Select location...</option>
+            <option value="Iowa Falls">Iowa Falls</option>
+            <option value="Webster City">Webster City</option>
+            <option value="Elkhorn">Elkhorn</option>
+        `;
+    }
+})();
+
+document.getElementById('oneOnOneForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    const data = {
+        location:           document.getElementById('locationHidden').value,
+        date:               document.getElementById('date').value,
+        employee:           document.getElementById('employee').value,
+        supervisor:         document.getElementById('supervisor').value,
+        summary:            document.getElementById('summary').value,
+    };
+
+    try {
+        const res = await fetch('/api/forms/submit', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                form_type:     FORM_TYPE,
+                form_title:    FORM_TITLE,
+                employee_name: data.employee || '',
+                location:      data.location || '',
+                form_data:     data
+            })
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            alert('Error: ' + (err.error || 'Submission failed'));
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit';
+            return;
+        }
+        // Show success popup
+        const popup = document.createElement('div');
+        popup.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+        popup.innerHTML = `
+            <div style="background:#fff;border-radius:12px;padding:40px;text-align:center;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+                <div style="width:56px;height:56px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+                    <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <div style="font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:8px">Form Submitted!</div>
+                <div style="font-size:14px;color:#6b7280">Your form has been submitted successfully. This page will close in 5 seconds.</div>
+            </div>`;
+        document.body.appendChild(popup);
+        setTimeout(() => { window.close(); }, 5000);
+    } catch(err) {
+        console.error('Submit error:', err);
+        alert('Submission failed. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+    }
+});
+</script>
+</body>
+</html>

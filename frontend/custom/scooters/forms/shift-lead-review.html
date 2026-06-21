@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Lead Review</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="icon" type="image/x-icon" href="/scooters/dashboard/favicon.ico">
+    <link rel="stylesheet" href="/scooters/forms/styles.css?v=3">
+</head>
+
+<script>
+    const FORM_NAME = 'reviews';
+    const FORM_TYPE = 'shift-lead-review';
+    const FORM_TITLE = 'Shift Lead Review';
+    const LANDING_URL = 'https://app.elevateerconsulting.com/scooters/forms';
+
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        const pt = params.get('pt');
+
+        // No token at all - redirect immediately
+        if (!pt) {
+            window.location.replace(LANDING_URL);
+            return;
+        }
+
+        // Decode and validate token
+        let decoded;
+        try {
+            decoded = atob(pt);
+        } catch(e) {
+            window.location.replace(LANDING_URL);
+            return;
+        }
+
+        // Check current and previous 5 min window
+        const currentWindow = Math.floor(Date.now() / 300000);
+        const prevWindow = currentWindow - 1;
+
+        const validTokens = [
+            `scooters-page-${FORM_NAME}-${currentWindow}`,
+            `scooters-page-${FORM_NAME}-${prevWindow}`
+        ];
+
+        if (!validTokens.includes(decoded)) {
+            window.location.replace(LANDING_URL);
+            return;
+        }
+
+        // Valid - remove token from URL bar so it can't be copied/shared
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+    })();
+</script>
+
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <img src="/images/ScooterLogo.png" alt="Scooter's Logo" class="logo">
+            <h1>Shift Lead Review</h1>
+            <p>Annual performance review and mid-year employee assessment.</p>
+        </div>
+
+        <div class="form-content">
+            <form action="https://n8n.ramosautomations.cc/webhook/shiftlead" method="GET" id="reviewForm">
+
+                <!-- Employee Information -->
+                <div class="form-section">
+                    <h2 class="section-title">Employee Information</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="location">Location <span class="required">*</span></label>
+                            <select id="location" required disabled>
+                                <option value="">Loading...</option>
+                            </select>
+                            <input type="hidden" id="locationHidden" name="location">
+                        </div>
+                        <div class="form-group">
+                            <label for="date">Date <span class="required">*</span></label>
+                            <input type="date" id="date" name="date" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="employee">Employee Name <span class="required">*</span></label>
+                            <select id="employee" name="employee" required><option value="">Select employee...</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="supervisor">Supervisor Name <span class="required">*</span></label>
+                            <select id="supervisor" name="supervisor" required><option value="">Select supervisor...</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="reviewType">Review Type <span class="required">*</span></label>
+                            <select id="reviewType" name="reviewType" required>
+                                <option value="">Select review type...</option>
+                                <option value="Annual">Annual</option>
+                                <option value="Mid-year">Mid-year</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Core Competencies -->
+                <div class="form-section">
+                    <h2 class="section-title">Core Competencies</h2>
+                    <p class="rating-legend" style="margin-bottom:14px;">Rating scale: 1 = Needs Improvement &nbsp;·&nbsp; 2 = Developing &nbsp;·&nbsp; 3 = Meets Expectations &nbsp;·&nbsp; 4 = Exceeds Expectations &nbsp;·&nbsp; 5 = Excellent</p>
+                    <table class="rating-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th class="rating-col">Rating</th>
+                                <th class="rubric-col">Rubric</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="category-col">Customer Experience</td>
+                                <td class="rating-col">
+                                    <div class="rating-scale-inline">
+                                        <label><input type="radio" name="rating_customer_experience" value="1" required> 1</label>
+                                        <label><input type="radio" name="rating_customer_experience" value="2"> 2</label>
+                                        <label><input type="radio" name="rating_customer_experience" value="3"> 3</label>
+                                        <label><input type="radio" name="rating_customer_experience" value="4"> 4</label>
+                                        <label><input type="radio" name="rating_customer_experience" value="5"> 5</label>
+                                    </div>
+                                </td>
+                                <td class="rubric-col">Sets the tone for service, supports baristas, accuracy</td>
+                            </tr>
+                            <tr>
+                                <td class="category-col">Teamwork</td>
+                                <td class="rating-col">
+                                    <div class="rating-scale-inline">
+                                        <label><input type="radio" name="rating_teamwork" value="1" required> 1</label>
+                                        <label><input type="radio" name="rating_teamwork" value="2"> 2</label>
+                                        <label><input type="radio" name="rating_teamwork" value="3"> 3</label>
+                                        <label><input type="radio" name="rating_teamwork" value="4"> 4</label>
+                                        <label><input type="radio" name="rating_teamwork" value="5"> 5</label>
+                                    </div>
+                                </td>
+                                <td class="rubric-col">Team communication, leads calmly, helps others </td>
+                            </tr>
+                            <tr>
+                                <td class="category-col">Reliability</td>
+                                <td class="rating-col">
+                                    <div class="rating-scale-inline">
+                                        <label><input type="radio" name="rating_reliability" value="1" required> 1</label>
+                                        <label><input type="radio" name="rating_reliability" value="2"> 2</label>
+                                        <label><input type="radio" name="rating_reliability" value="3"> 3</label>
+                                        <label><input type="radio" name="rating_reliability" value="4"> 4</label>
+                                        <label><input type="radio" name="rating_reliability" value="5"> 5</label>
+                                    </div>
+                                </td>
+                                <td class="rubric-col">Attendance, dependable presence, takes initiative</td>
+                            </tr>
+                            <tr>
+                                <td class="category-col">Cleanliness &amp; Standards</td>
+                                <td class="rating-col">
+                                    <div class="rating-scale-inline">
+                                        <label><input type="radio" name="rating_cleanliness" value="1" required> 1</label>
+                                        <label><input type="radio" name="rating_cleanliness" value="2"> 2</label>
+                                        <label><input type="radio" name="rating_cleanliness" value="3"> 3</label>
+                                        <label><input type="radio" name="rating_cleanliness" value="4"> 4</label>
+                                        <label><input type="radio" name="rating_cleanliness" value="5"> 5</label>
+                                    </div>
+                                </td>
+                                <td class="rubric-col">Holds team to standards, leads by example</td>
+                            </tr>
+                            <tr>
+                                <td class="category-col">Adaptability</td>
+                                <td class="rating-col">
+                                    <div class="rating-scale-inline">
+                                        <label><input type="radio" name="rating_adaptability" value="1" required> 1</label>
+                                        <label><input type="radio" name="rating_adaptability" value="2"> 2</label>
+                                        <label><input type="radio" name="rating_adaptability" value="3"> 3</label>
+                                        <label><input type="radio" name="rating_adaptability" value="4"> 4</label>
+                                        <label><input type="radio" name="rating_adaptability" value="5"> 5</label>
+                                    </div>
+                                </td>
+                                <td class="rubric-col">Leads through sudden changes or team needs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Values and Behaviors -->
+                <div class="form-section">
+                    <h2 class="section-title">Values and Behaviors</h2>
+                    <p class="rating-legend" style="margin-bottom:14px;">Rating scale: 1 = Needs Improvement &nbsp;·&nbsp; 2 = Developing &nbsp;·&nbsp; 3 = Meets Expectations &nbsp;·&nbsp; 4 = Exceeds Expectations &nbsp;·&nbsp; 5 = Excellent</p>
+                    <table class="rating-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th class="rating-col">Rating</th>
+                                <th class="rubric-col">Rubric</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="category-col">Integrity</td>
+                                <td class="rating-col">
+                                    <div class="rating-scale-inline">
+                                        <label><input type="radio" name="rating_integrity" value="1" required> 1</label>
+                                        <label><input type="radio" name="rating_integrity" value="2"> 2</label>
+                                        <label><input type="radio" name="rating_integrity" value="3"> 3</label>
+                                        <label><input type="radio" name="rating_integrity" value="4"> 4</label>
+                                        <label><input type="radio" name="rating_integrity" value="5"> 5</label>
+                                    </div>
+                                </td>
+                                <td class="rubric-col">Address concerns fairly</td>
+                            </tr>
+                            <tr>
+                                <td class="category-col">Love</td>
+                                <td class="rating-col">
+                                    <div class="rating-scale-inline">
+                                        <label><input type="radio" name="rating_love" value="1" required> 1</label>
+                                        <label><input type="radio" name="rating_love" value="2"> 2</label>
+                                        <label><input type="radio" name="rating_love" value="3"> 3</label>
+                                        <label><input type="radio" name="rating_love" value="4"> 4</label>
+                                        <label><input type="radio" name="rating_love" value="5"> 5</label>
+                                    </div>
+                                </td>
+                                <td class="rubric-col">Build trust with the team and with customers</td>
+                            </tr>
+                            <tr>
+                                <td class="category-col">Humility</td>
+                                <td class="rating-col">
+                                    <div class="rating-scale-inline">
+                                        <label><input type="radio" name="rating_humility" value="1" required> 1</label>
+                                        <label><input type="radio" name="rating_humility" value="2"> 2</label>
+                                        <label><input type="radio" name="rating_humility" value="3"> 3</label>
+                                        <label><input type="radio" name="rating_humility" value="4"> 4</label>
+                                        <label><input type="radio" name="rating_humility" value="5"> 5</label>
+                                    </div>
+                                </td>
+                                <td class="rubric-col">Open to coaching/feedback given and/or received</td>
+                            </tr>
+                            <tr>
+                                <td class="category-col">Courage</td>
+                                <td class="rating-col">
+                                    <div class="rating-scale-inline">
+                                        <label><input type="radio" name="rating_courage" value="1" required> 1</label>
+                                        <label><input type="radio" name="rating_courage" value="2"> 2</label>
+                                        <label><input type="radio" name="rating_courage" value="3"> 3</label>
+                                        <label><input type="radio" name="rating_courage" value="4"> 4</label>
+                                        <label><input type="radio" name="rating_courage" value="5"> 5</label>
+                                    </div>
+                                </td>
+                                <td class="rubric-col">Steps out of comfort zone, handles conflict well</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Recognition -->
+                <div class="form-section">
+                    <h2 class="section-title">Recognition</h2>
+                    <div class="form-row single">
+                        <div class="form-group">
+                            <label for="recognition">Discuss customer praise/team shout-outs and/or cool moments!!</label>
+                            <textarea id="recognition" name="recognition" placeholder="Share any highlights, customer compliments, or memorable moments from this review period..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Growth Check-In -->
+                <div class="form-section">
+                    <h2 class="section-title">Growth Check-In</h2>
+                    <p style="font-size:14px; color:#555; margin-bottom:16px;">A look ahead to what's next.</p>
+
+                    <div class="yes-no-group">
+                        <div class="yes-no-question">Is this Shift Lead interested in developing further?</div>
+                        <div class="radio-options">
+                            <label class="radio-option">
+                                <input type="radio" name="interested_in_developing" value="Yes" required>
+                                Yes
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="interested_in_developing" value="No">
+                                No
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr class="yes-no-divider">
+
+                    <div class="yes-no-group">
+                        <div class="yes-no-question">Training/Support: Is this Shift Lead developing others?</div>
+                        <div class="radio-options">
+                            <label class="radio-option">
+                                <input type="radio" name="demonstrating_values" value="Yes" required>
+                                Yes
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="demonstrating_values" value="No">
+                                No
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr class="yes-no-divider">
+
+                    <div class="yes-no-group">
+                        <div class="yes-no-question">Leadership: Can this Shift Lead defuse team tension/customer complaints?</div>
+                        <div class="radio-options">
+                            <label class="radio-option">
+                                <input type="radio" name="question3" value="Yes" required>
+                                Yes
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="question3" value="No">
+                                No
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr class="yes-no-divider">
+
+                    <div class="yes-no-group">
+                        <div class="yes-no-question">Readiness for management role:</div>
+                        <div class="radio-options">
+                            <label class="radio-option">
+                                <input type="radio" name="question4" value="Yes" required>
+                                Now
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="question4" value="Yes" required>
+                                3 - 6 Months
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="question4" value="Yes" required>
+                                12 -18 months
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="question4" value="Yes" required>
+                                Future
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-row single" style="margin-top:20px;">
+                        <div class="form-group">
+                            <label for="baristaComments">Shift Lead Comments <span style="font-weight:400; color:#888;">(optional)</span></label>
+                            <textarea id="baristaComments" name="baristaComments" placeholder="Employee's thoughts, goals, or feedback..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-row single">
+                        <div class="form-group">
+                            <label for="managerComments">Manager Comments <span class="required">*</span></label>
+                            <textarea id="managerComments" name="managerComments" placeholder="Manager's overall assessment, action items, and next steps..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Signatures Section -->
+                <div class="signature-group">
+                    <h2 class="section-title">Acknowledgment & Signatures</h2>
+                    <p>I acknowledge that I have participated in this discussion and have reviewed the information documented above. 
+                        My signature confirms that this conversation has taken place and that I understand the content.
+                    </p><br/>
+                    <p>Your typed name serves as your acknowledgement and electronic signature.</p><br/>
+                    <div class="signature-row">
+                        <div class="form-group">
+                            <label for="employeeSignature">Employee Signature <span class="required">*</span></label>
+                            <input type="text" id="employeeSignature" name="employeeSignature" placeholder="Type your full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="supervisorSignature">Supervisor Signature <span class="required">*</span></label>
+                            <input type="text" id="supervisorSignature" name="supervisorSignature" placeholder="Type your full name" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Buttons -->
+                <div class="button-group">
+                    <button type="reset" class="btn-reset">Clear Form</button>
+                    <button type="submit" class="btn-submit">Submit</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+    </script>
+    <script>
+async function loadEmployees(location, currentUserName = "", loggedInUser = null) {
+    const empSelect = document.getElementById('employee');
+    
+
+    if (empSelect) empSelect.innerHTML = '<option value="">Loading employees...</option>';
+
+    try {
+        const res = await fetch('/api/employees', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch');
+        let employees = await res.json();
+
+        const allEmployees = employees;
+        if (location) employees = employees.filter(e => e.location === location);
+        const active = employees.filter(e => (e.status === 'Active' || e.status === 'active') && e.title === 'Shift Lead');
+
+        const loggedInEmpRecord = loggedInUser ? allEmployees.find(e => e.name === loggedInUser.name) : null;
+        const userTitle = loggedInEmpRecord ? loggedInEmpRecord.title : (loggedInUser ? (loggedInUser.title || loggedInUser.role || 'manager') : '');
+        let allowedSupervisorTitles;
+        if (['Owner', 'owner'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Owner', 'General Manager', 'Manager', 'Assistant Manager'];
+        } else if (['General Manager', 'general manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['General Manager', 'Manager', 'Assistant Manager'];
+        } else if (['Manager', 'manager', 'Store Manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Manager', 'Store Manager'];
+        } else if (['Assistant Manager', 'assistant manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Assistant Manager'];
+        } else {
+            allowedSupervisorTitles = ['General Manager', 'Manager', 'Assistant Manager'];
+        }
+        // Owner and General Manager show regardless of location; Manager/Assistant Manager are location-scoped
+        const locationExemptTitles = ['owner', 'general manager'];
+        let supervisors = allEmployees.filter(e =>
+            allowedSupervisorTitles.some(t => t.toLowerCase() === (e.title||'').toLowerCase()) &&
+            (e.status === 'Active' || e.status === 'active') &&
+            (locationExemptTitles.includes((e.title||'').toLowerCase()) || !location || e.location === location) &&
+            !['Shilo', 'Hernan'].some(n => e.name.startsWith(n))
+        );
+        if (loggedInUser && loggedInUser.name) {
+            const empRecord = allEmployees.find(e => e.name === loggedInUser.name);
+            const empTitle = empRecord ? empRecord.title : userTitle;
+            if (empTitle && allowedSupervisorTitles.some(t => t.toLowerCase() === empTitle.toLowerCase())) {
+                const alreadyIn = supervisors.some(s => s.name === loggedInUser.name);
+                if (!alreadyIn) {
+                    supervisors = [{ name: loggedInUser.name, title: empTitle }, ...supervisors];
+                }
+            }
+        }
+        const supSelect = document.getElementById('supervisor');
+        if (supSelect) {
+            const currentSup = supSelect.value;
+            supSelect.innerHTML = '<option value="">Select supervisor...</option>' +
+                supervisors.map(e => `<option value="${e.name}">${e.name} (${e.title})</option>`).join('');
+            if (currentSup) supSelect.value = currentSup;
+        }
+
+        if (empSelect) {
+            empSelect.innerHTML = active.length
+                ? '<option value="">Select employee...</option>' +
+                  active.filter(e => !currentUserName || e.name !== currentUserName).map(e => `<option value="${e.name}">${e.name} — ${e.title}</option>`).join('')
+                : '<option value="">No employees found</option>';
+
+
+        }
+
+    } catch (err) {
+        console.error('Error loading employees:', err);
+        if (empSelect) empSelect.innerHTML = '<option value="">Could not load employees</option>';
+    }
+}
+
+(async function() {
+    try {
+        const response = await fetch('/auth/current-user', { credentials: 'include' });
+        if (!response.ok) { console.error('Failed to get user info'); return; }
+        const userData = await response.json();
+
+        const locationSelect = document.getElementById('location');
+        const locationHidden = document.getElementById('locationHidden');
+        locationSelect.innerHTML = '';
+        let currentLocation = '';
+
+        if (userData.is_admin) {
+            locationSelect.disabled = false;
+            locationSelect.innerHTML = `
+                <option value="">Select location...</option>
+                <option value="Iowa Falls">Iowa Falls</option>
+                <option value="Webster City">Webster City</option>
+                <option value="Elkhorn">Elkhorn</option>
+            `;
+            locationSelect.addEventListener('change', function() {
+                locationHidden.value = this.value;
+                currentLocation = this.value;
+                loadEmployees(currentLocation, userData.name || '', userData);
+            });
+        } else {
+            currentLocation = userData.location || '';
+            locationSelect.disabled = true;
+            locationSelect.innerHTML = `<option value="${currentLocation}">${currentLocation}</option>`;
+            locationHidden.value = currentLocation;
+        }
+
+        await loadEmployees(currentLocation, userData.name || '', userData);
+
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        const locationSelect = document.getElementById('location');
+        locationSelect.disabled = false;
+        locationSelect.innerHTML = `
+            <option value="">Select location...</option>
+            <option value="Iowa Falls">Iowa Falls</option>
+            <option value="Webster City">Webster City</option>
+            <option value="Elkhorn">Elkhorn</option>
+        `;
+    }
+})();
+    </script>
+
+    <script>
+(async function() {
+    try {
+        const response = await fetch('/auth/current-user', { credentials: 'include' });
+        if (!response.ok) { console.error('Failed to get user info'); return; }
+        const userData = await response.json();
+
+        // ── Location ──
+        const locationSelect = document.getElementById('location');
+        const locationHidden = document.getElementById('locationHidden');
+        locationSelect.innerHTML = '';
+        let currentLocation = '';
+
+        if (userData.is_admin) {
+            locationSelect.disabled = false;
+            locationSelect.innerHTML = `
+                <option value="">Select location...</option>
+                <option value="Iowa Falls">Iowa Falls</option>
+                <option value="Webster City">Webster City</option>
+                <option value="Elkhorn">Elkhorn</option>
+            `;
+            locationSelect.addEventListener('change', function() {
+                locationHidden.value = this.value;
+                currentLocation = this.value;
+                loadEmployees(currentLocation, userData.is_admin);
+            });
+        } else {
+            currentLocation = userData.location || '';
+            locationSelect.disabled = true;
+            locationSelect.innerHTML = `<option value="${currentLocation}">${currentLocation}</option>`;
+            locationHidden.value = currentLocation;
+        }
+
+        // ── Employees ──
+        await loadEmployees(currentLocation, userData.is_admin);
+
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        const locationSelect = document.getElementById('location');
+        locationSelect.disabled = false;
+        locationSelect.innerHTML = `
+            <option value="">Select location...</option>
+            <option value="Iowa Falls">Iowa Falls</option>
+            <option value="Webster City">Webster City</option>
+            <option value="Elkhorn">Elkhorn</option>
+        `;
+    }
+})();
+
+async function loadEmployees(location, isAdmin) {
+    const empSelect = document.getElementById('employee');
+    
+
+    if (empSelect) empSelect.innerHTML = '<option value="">Loading employees...</option>';
+
+    try {
+        const res = await fetch('/api/employees', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch employees');
+        let employees = await res.json();
+
+        const allEmployees = employees;
+        if (location) employees = employees.filter(e => e.location === location);
+        const active = employees.filter(e => (e.status === 'Active' || e.status === 'active') && e.title === 'Shift Lead');
+
+        // Build supervisor map: employee name -> supervisor name
+        // Populate supervisor dropdown with managers at this location
+        // Determine which supervisor titles to show based on logged-in user role
+        const loggedInEmpRecord = loggedInUser ? allEmployees.find(e => e.name === loggedInUser.name) : null;
+        const userTitle = loggedInEmpRecord ? loggedInEmpRecord.title : (loggedInUser ? (loggedInUser.title || loggedInUser.role || 'manager') : '');
+        let allowedSupervisorTitles;
+        if (['Owner', 'owner'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Owner', 'General Manager', 'Manager', 'Assistant Manager'];
+        } else if (['General Manager', 'general manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['General Manager', 'Manager', 'Assistant Manager'];
+        } else if (['Manager', 'manager', 'Store Manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Manager', 'Store Manager'];
+        } else if (['Assistant Manager', 'assistant manager'].includes(userTitle)) {
+            allowedSupervisorTitles = ['Assistant Manager'];
+        } else {
+            allowedSupervisorTitles = ['General Manager', 'Manager', 'Assistant Manager'];
+        }
+
+        // Build supervisor list from employees + add logged-in user if they are a supervisor
+        let supervisors = allEmployees.filter(e =>
+            allowedSupervisorTitles.some(t => t.toLowerCase() === (e.title||'').toLowerCase()) &&
+            (e.status === 'Active' || e.status === 'active') &&
+            (e.title === 'General Manager' || !location || e.location === location) &&
+            !['Shilo', 'Hernan'].some(n => e.name.startsWith(n))
+        );
+
+        // Add logged-in user to supervisor list using their employee record title
+        if (loggedInUser && loggedInUser.name) {
+            const empRecord = allEmployees.find(e => e.name === loggedInUser.name);
+            const empTitle = empRecord ? empRecord.title : userTitle;
+            if (empTitle && allowedSupervisorTitles.some(t => t.toLowerCase() === empTitle.toLowerCase())) {
+                const alreadyIn = supervisors.some(s => s.name === loggedInUser.name);
+                if (!alreadyIn) {
+                    supervisors = [{ name: loggedInUser.name, title: empTitle }, ...supervisors];
+                }
+            }
+        }
+        const supSelect = document.getElementById('supervisor');
+        if (supSelect) {
+            const currentSup = supSelect.value;
+            supSelect.innerHTML = '<option value="">Select supervisor...</option>' +
+                supervisors.map(e => `<option value="${e.name}">${e.name} (${e.title})</option>`).join('');
+            if (currentSup) supSelect.value = currentSup;
+        }
+
+        // Populate employee dropdown
+        if (empSelect) {
+            empSelect.innerHTML = active.length
+                ? '<option value="">Select employee...</option>' +
+                  active.map(e => `<option value="${e.name}">${e.name} — ${e.title}</option>`).join('')
+                : '<option value="">No employees found</option>';
+
+            // Auto-fill supervisor when employee is selected
+            empSelect.addEventListener('change', function() {
+                if (supInput) {
+                    supInput.value = supervisorMap[this.value] || '';
+                }
+            });
+        }
+
+    } catch (err) {
+        console.error('Error loading employees:', err);
+        if (empSelect) empSelect.innerHTML = '<option value="">Could not load employees</option>';
+    }
+}
+
+        if (supSelect) {
+            const managerTitles = ['store manager'];
+            const supervisors = active.filter(e =>
+                managerTitles.some(t => e.title.toLowerCase().includes(t))
+            );
+            supSelect.innerHTML = supervisors.length
+                ? '<option value="">Select supervisor...</option>' +
+                  supervisors.map(e => `<option value="${e.name}">${e.name} — ${e.title}</option>`).join('')
+                : '<option value="">No supervisors found</option>';
+        }
+
+    } catch (err) {
+        console.error('Error loading employees:', err);
+        if (empSelect) empSelect.innerHTML = '<option value="">Could not load employees</option>';
+        if (supSelect) supSelect.innerHTML = '<option value="">Could not load supervisors</option>';
+    }
+}
+
+        // Only show active employees
+        employees = employees.filter(e => e.status === 'Active' || e.status === 'active');
+
+        if (!employees.length) {
+            empSelect.innerHTML = '<option value="">No employees found</option>';
+            return;
+        }
+
+        empSelect.innerHTML = '<option value="">Select employee...</option>' +
+            employees.map(e => `<option value="${e.name}">${e.name} — ${e.title}</option>`).join('');
+
+    } catch (err) {
+        console.error('Error loading employees:', err);
+        empSelect.innerHTML = '<option value="">Could not load employees</option>';
+    }
+}
+// Intercept form submit
+document.getElementById('reviewForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formEl = this;
+    if (!formEl.checkValidity()) {
+        formEl.reportValidity();
+        return;
+    }
+
+    const submitBtn = formEl.querySelector('.btn-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    // Collect all form data
+    const data = {};
+    new FormData(formEl).forEach((v, k) => { data[k] = v; });
+    // Also get location from hidden field
+    const locHidden = document.getElementById('locationHidden');
+    if (locHidden) data.location = locHidden.value;
+
+    try {
+        const res = await fetch('/api/forms/submit', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                form_type: FORM_TYPE,
+                form_title: FORM_TITLE,
+                employee_name: data.employee || '',
+                location: data.location || '',
+                form_data: data
+            })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            alert('Error: ' + (err.error || 'Submission failed'));
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit';
+            return;
+        }
+
+        // Show success popup
+        const popup = document.createElement('div');
+        popup.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+        popup.innerHTML = `
+            <div style="background:#fff;border-radius:12px;padding:40px;text-align:center;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+                <div style="width:56px;height:56px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+                    <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <div style="font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:8px">Form Submitted!</div>
+                <div style="font-size:14px;color:#6b7280">Your form has been submitted successfully. This page will close in 5 seconds.</div>
+            </div>`;
+        document.body.appendChild(popup);
+        setTimeout(() => { window.close(); }, 5000);
+
+    } catch (err) {
+        console.error('Submit error:', err);
+        alert('Something went wrong. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+    }
+});
+    </script>
+</body>
+</html>

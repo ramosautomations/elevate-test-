@@ -1,0 +1,136 @@
+services:
+  # PostgreSQL Database
+  elevate-db:
+    image: postgres:16-alpine
+    container_name: elevate-db-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: elevate
+      POSTGRES_USER: elevate
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - elevate-db-data-test:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "6432:5432"
+    networks:
+      - elevate-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U elevate"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for job queue
+  redis:
+    image: redis:7-alpine
+    container_name: elevate-redis-test
+    restart: unless-stopped
+    volumes:
+      - elevate-redis-data-test:/data
+    networks:
+      - elevate-test-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Node.js API Backend
+  elevate-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: elevate-api-test
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DB_HOST: elevate-db
+      DB_PORT: 5432
+      DB_NAME: elevate
+      DB_USER: elevate
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SESSION_SECRET: ${SESSION_SECRET}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      PORT: 3000
+    volumes:
+      - ./test-data:/data
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      elevate-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - elevate-test-network
+
+  # Worker for background jobs (PDF generation, emails)
+  elevate-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: elevate-worker-test
+    restart: unless-stopped
+    command: node worker.js
+    environment:
+      NODE_ENV: development
+      DB_HOST: elevate-db
+      DB_PORT: 5432
+      DB_NAME: elevate
+      DB_USER: elevate
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RESEND_API_KEY: ${RESEND_API_KEY}
+    volumes:
+      - ./test-data:/data
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      elevate-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - elevate-test-network
+
+  # Nginx reverse proxy and static file server
+  nginx:
+    image: nginx:alpine
+    container_name: elevate-nginx-test
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./test-data/uploads:/uploads:ro
+    depends_on:
+      - elevate-api
+    networks:
+      - elevate-test-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # NOTE: The production 'cloudflared' service is intentionally OMITTED from the
+  # test stack. Running it here would start a second connector on the production
+  # Cloudflare tunnel and could hijack live traffic. Access test via IP:8080,
+  # and add a SEPARATE tunnel with its OWN token/hostname later if needed.
+
+volumes:
+  elevate-db-data-test:
+    driver: local
+  elevate-redis-data-test:
+    driver: local
+
+networks:
+  elevate-test-network:
+    driver: bridge

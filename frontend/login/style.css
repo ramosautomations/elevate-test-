@@ -1,0 +1,268 @@
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+       .header {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            text-align: center;
+            padding: 25px 40px 20px 40px;
+            color: white;
+        }
+
+        .logo-image {
+            max-width: 130px;
+            height: auto;
+            margin: 0 auto 15px;
+            display: block;
+        }
+
+        h1 {
+            color: white;
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        .checkmark {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.4);
+        }
+
+        .checkmark svg {
+            width: 40px;
+            height: 40px;
+            stroke: white;
+            stroke-width: 3;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .thank-you-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 14px;
+        }
+
+        .thank-you-message {
+            font-size: 16px;
+            color: #718096;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .countdown-bar-wrapper {
+            background: #f0f0f0;
+            border-radius: 50px;
+            height: 6px;
+            width: 100%;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .countdown-bar {
+            height: 6px;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            width: 100%;
+            animation: shrink 10s linear forwards;
+        }
+
+        @keyframes shrink {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        .countdown-text {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        .countdown-text span {
+            font-weight: 600;
+            color: #dc2626;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 24px;
+            color: #dc2626;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+
+        .form-container {
+            padding: 50px 40px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .select-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .select-wrapper::after {
+            content: '▾';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #991b1b;
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+
+        select {
+            width: 100%;
+            padding: 14px 44px 14px 16px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #111827;
+            background: #fff;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            appearance: none;
+            cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            outline: none;
+        }
+
+        select:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+        }
+
+        select option[value=""] {
+            color: #9ca3af;
+        }
+
+        .form-description {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: -12px;
+            margin-bottom: 24px;
+            min-height: 18px;
+            transition: opacity 0.2s ease;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 16px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.4);
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(196, 30, 58, 0.5);
+        }
+
+        .submit-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+
+        @media (max-width: 640px) {
+            .header {
+                padding: 20px 20px 18px 20px;
+            }
+
+            .content {
+                padding: 40px 20px;
+            }
+
+            .logo-image {
+                max-width: 110px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+   
+        }
+        
+        .logout-btn {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            padding: 12px 20px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            color: #dc2626;
+            border-color: #dc2626;
+            background: #fef2f2;
+        }

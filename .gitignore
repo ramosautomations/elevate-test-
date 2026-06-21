@@ -1,0 +1,17 @@
+.env
+node_modules/
+*.log
+npm-debug.log*
+.DS_Store
+*.gz
+dumps/
+*.backup
+*.save
+database/authdb-backup-20260329.sql
+database/authdb-backup.sql
+*.py
+
+node_modules/
+.env
+test-data/
+*.log
