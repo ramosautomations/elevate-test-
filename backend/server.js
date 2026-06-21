@@ -29,6 +29,14 @@ function authenticateToken(req, res, next) {
   }
 }
 
+function requireCompany(req, res) {
+  if (!req.user || !req.user.company_id) {
+    res.status(400).json({ error: 'No company associated with this account' });
+    return null;
+  }
+  return req.user.company_id;
+}
+
 // Database connection pool
 const pool = new Pool({
   host: process.env.DB_HOST || 'elevate-db',
@@ -199,7 +207,7 @@ app.get('/api/employees/all', authenticateToken, async (req, res) => {
       AND LOWER(title) IN ('general manager', 'manager', 'assistant manager', 'owner')
       AND status = 'Active'
       ORDER BY name ASC
-    `, [req.user.company_id || 1]);
+    `, [req.user.company_id]);
     res.json(rows);
   } catch(err) {
     console.error('Employees all error:', err);
@@ -227,7 +235,7 @@ app.get('/api/employees', authenticateToken, async (req, res) => {
       WHERE company_id = $1
     `;
 
-    const params = [user.company_id || 1];
+    const params = [user.company_id];
 
     // Filter by location for non-admin managers
     if (currentUser && currentUser.location && !currentUser.is_admin && currentUser.role === 'manager') {
@@ -296,7 +304,7 @@ app.post('/api/employees', authenticateToken, async (req, res) => {
       pay_type      || 'hourly',
       pay_amount    || null,
       termination_date || null,
-      req.user.company_id || 1,
+      req.user.company_id,
       req.user.id
     ]);
 
@@ -321,7 +329,7 @@ app.get('/api/employees/:id', authenticateToken, async (req, res) => {
               employment_type, pay_type, pay_amount, termination_date
        FROM employees
        WHERE id = $1 AND company_id = $2`,
-      [employeeId, req.user.company_id || 1]
+      [employeeId, req.user.company_id]
     );
     
     if (rows.length === 0) {
@@ -347,7 +355,7 @@ app.get('/api/employees/:id', authenticateToken, async (req, res) => {
               employment_type, pay_type, pay_amount, termination_date
        FROM employees
        WHERE id = $1 AND company_id = $2`,
-      [employeeId, req.user.company_id || 1]
+      [employeeId, req.user.company_id]
     );
     
     if (rows.length === 0) {
@@ -377,7 +385,7 @@ app.get('/api/records', authenticateToken, async (req, res) => {
       WHERE fs.company_id = $1
     `;
     
-    const params = [req.user.company_id || 1];
+    const params = [req.user.company_id];
     let paramCount = 1;
     
     if (form_type) {
@@ -435,7 +443,7 @@ app.delete('/api/employees/:id', authenticateToken, async (req, res) => {
 
     const { rows } = await pool.query(
       'DELETE FROM employees WHERE id = $1 AND company_id = $2 RETURNING id',
-      [req.params.id, req.user.company_id || 1]
+      [req.params.id, req.user.company_id]
     );
 
     if (rows.length === 0) {
@@ -469,7 +477,7 @@ app.post('/api/forms/submit', authenticateToken, async (req, res) => {
     // Look up employee id
     const { rows: empRows } = await pool.query(
       'SELECT id FROM employees WHERE name = $1 AND company_id = $2',
-      [employee_name, req.user.company_id || 1]
+      [employee_name, req.user.company_id]
     );
     const employee_id = empRows[0]?.id || null;
 
@@ -489,7 +497,7 @@ app.post('/api/forms/submit', authenticateToken, async (req, res) => {
       req.user.name || req.user.email,
       JSON.stringify(form_data),
       location || null,
-      req.user.company_id || 1
+      req.user.company_id
     ]);
 
     const submission_id = subRows[0].id;
@@ -614,7 +622,7 @@ app.put('/api/employees/:id', authenticateToken, async (req, res) => {
       hire_date || null, status || 'active',
       employment_type || 'full-time', pay_type || 'hourly',
       pay_amount || null, termination_date || null,
-      req.user.id, req.params.id, req.user.company_id || 1
+      req.user.id, req.params.id, req.user.company_id
     ]);
 
     if (rows.length === 0) {
@@ -637,7 +645,7 @@ app.delete('/api/forms/:id', authenticateToken, async (req, res) => {
     }
     const { rows } = await pool.query(
       'DELETE FROM form_submissions WHERE id = $1 AND company_id = $2 RETURNING id',
-      [req.params.id, req.user.company_id || 1]
+      [req.params.id, req.user.company_id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Document not found' });
     res.json({ success: true });
@@ -659,7 +667,7 @@ app.get('/api/logs/logins', authenticateToken, async (req, res) => {
       WHERE u.company_id = $1
       ORDER BY l.login_at DESC
       LIMIT 500
-    `, [req.user.company_id || 1]);
+    `, [req.user.company_id]);
     res.json(rows);
   } catch(err) {
     console.error('Login logs error:', err);
@@ -678,7 +686,7 @@ app.get('/api/logs/submissions', authenticateToken, async (req, res) => {
       WHERE fs.company_id = $1
       ORDER BY fs.submission_date DESC
       LIMIT 500
-    `, [req.user.company_id || 1]);
+    `, [req.user.company_id]);
     res.json(rows);
   } catch(err) {
     console.error('Submission logs error:', err);
@@ -697,7 +705,7 @@ app.get('/api/reviews', authenticateToken, async (req, res) => {
       FROM customer_reviews
       WHERE company_id = $1
       ORDER BY review_date DESC, created_at DESC
-    `, [req.user.company_id || 1]);
+    `, [req.user.company_id]);
     res.json(rows);
   } catch (err) {
     console.error('Reviews fetch error:', err);
@@ -716,7 +724,7 @@ app.post('/api/reviews', authenticateToken, async (req, res) => {
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       RETURNING *
     `, [
-      req.user.company_id || 1,
+      req.user.company_id,
       req.user.id,
       customer_name,
       customer_email || null,
@@ -754,7 +762,7 @@ app.put('/api/reviews/:id', authenticateToken, async (req, res) => {
     `, [
       customer_name, customer_email || null, rating,
       category, status, review_text || null, review_date,
-      location || null, req.params.id, req.user.company_id || 1
+      location || null, req.params.id, req.user.company_id
     ]);
     if (!rows.length) return res.status(404).json({ error: 'Review not found' });
     res.json(rows[0]);
@@ -770,7 +778,7 @@ app.delete('/api/reviews/:id', authenticateToken, async (req, res) => {
     if (!req.user.is_admin) return res.status(403).json({ error: 'Admin only' });
     const { rows } = await pool.query(
       'DELETE FROM customer_reviews WHERE id = $1 AND company_id = $2 RETURNING id',
-      [req.params.id, req.user.company_id || 1]
+      [req.params.id, req.user.company_id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Review not found' });
     res.json({ success: true });
