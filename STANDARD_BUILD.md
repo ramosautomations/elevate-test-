@@ -185,3 +185,5 @@ standard/
 
 _(Append per merged slice: date, branch, what changed, isolation tested?)_
 2026-06-21 | standard/remove-company-id-fallback | Removed 17 `|| 1` fallbacks, added requireCompany guard | Isolation: pending second tenant
+2026-06-21 | standard/remove-company-id-fallback | Removed 17 || 1 fallbacks, added requireCompany guard | Isolation: pending second tenant
+2026-06-21 | standard/cookie-secure-env | Auth cookie secure flag now NODE_ENV-driven (HTTP test / HTTPS prod) | Tested: login persists
