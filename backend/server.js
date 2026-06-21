@@ -545,8 +545,25 @@ app.post('/api/forms/submit', authenticateToken, async (req, res) => {
 });
 
 // Serve PDF file
-app.get('/api/forms/pdf/:filename', authenticateToken, (req, res) => {
+app.get('/api/forms/pdf/:filename', authenticateToken, async (req, res) => {
   const filename = path.basename(req.params.filename);
+
+  try {
+    const ownerResult = await pool.query(
+      'SELECT company_id FROM form_submissions WHERE pdf_filename = $1',
+      [filename]
+    );
+    if (ownerResult.rows.length === 0) {
+      return res.status(404).json({ error: 'PDF not found' });
+    }
+    if (ownerResult.rows[0].company_id !== req.user.company_id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+  } catch (err) {
+    console.error('PDF ownership check error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+
   const filepath = path.join('/data/documents', filename);
   if (!fs.existsSync(filepath)) {
     return res.status(404).json({ error: 'PDF not found' });
