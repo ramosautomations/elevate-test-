@@ -184,3 +184,4 @@ standard/
 ## Progress log
 
 _(Append per merged slice: date, branch, what changed, isolation tested?)_
+2026-06-21 | standard/remove-company-id-fallback | Removed 17 `|| 1` fallbacks, added requireCompany guard | Isolation: pending second tenant
