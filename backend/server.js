@@ -37,6 +37,14 @@ function requireCompany(req, res) {
   return req.user.company_id;
 }
 
+function requireFormsManager(req, res, next) {
+  const role = (req.user.role || '').toLowerCase();
+  if (!['owner', 'general manager'].includes(role)) {
+    return res.status(403).json({ error: 'Owner or General Manager access required' });
+  }
+  next();
+}
+
 // Database connection pool
 const pool = new Pool({
   host: process.env.DB_HOST || 'elevate-db',
@@ -128,7 +136,8 @@ app.post('/auth/login', async (req, res) => {
         email: user.email, 
         is_admin: user.is_admin,
         is_super_admin: user.is_super_admin,
-        company_id: user.company_id 
+        company_id: user.company_id,
+        role: user.role
       },
       JWT_SECRET,
       { expiresIn: '8h' }
@@ -601,6 +610,146 @@ function buildFormPDF(title, employee, location, data) {
   <tbody>${rows}</tbody>
 </table>
 </body></html>`;
+
+// ── FORM TEMPLATES (builder) ──
+
+// List templates - management view (owner/GM only, includes inactive)
+app.get('/api/forms/templates', authenticateToken, requireFormsManager, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT ft.*, u.name as created_by_name
+       FROM form_templates ft
+       LEFT JOIN users u ON u.id = ft.created_by
+       WHERE ft.company_id = $1
+       ORDER BY ft.created_at DESC`,
+      [req.user.company_id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('List templates error:', err);
+    res.status(500).json({ error: 'Failed to fetch templates' });
+  }
+});
+
+// List templates visible to the current user (for the Forms panel / registry merge)
+app.get('/api/forms/templates/available', authenticateToken, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, form_type, title, description, audience
+       FROM form_templates
+       WHERE company_id = $1 AND is_active = true`,
+      [req.user.company_id]
+    );
+
+    const { rows: empRows } = await pool.query(
+      'SELECT title FROM employees WHERE name = $1 AND company_id = $2',
+      [req.user.name || '', req.user.company_id]
+    );
+    const myTitle = (empRows[0]?.title || '').toLowerCase();
+
+    const visible = rows.filter(t => {
+      const aud = t.audience || { type: 'all' };
+      if (aud.type === 'all') return true;
+      if (aud.type === 'roles') return aud.roles.some(r => r.toLowerCase() === myTitle);
+      if (aud.type === 'employees') return aud.employee_ids?.includes(req.user.id);
+      return false;
+    });
+
+    res.json(visible);
+  } catch (err) {
+    console.error('List available templates error:', err);
+    res.status(500).json({ error: 'Failed to fetch forms' });
+  }
+});
+
+// Get single template (for edit or for rendering the fill-out page)
+app.get('/api/forms/templates/:id', authenticateToken, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM form_templates WHERE id = $1 AND company_id = $2',
+      [req.params.id, req.user.company_id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Form not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Get template error:', err);
+    res.status(500).json({ error: 'Failed to fetch form' });
+  }
+});
+
+// Create template
+app.post('/api/forms/templates', authenticateToken, requireFormsManager, async (req, res) => {
+  try {
+    const { title, description, schema, audience } = req.body;
+
+    if (!title || !Array.isArray(schema) || schema.length === 0) {
+      return res.status(400).json({ error: 'title and at least one field are required' });
+    }
+
+    const form_type = 'custom-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
+
+    const { rows } = await pool.query(
+      `INSERT INTO form_templates (company_id, form_type, title, description, schema, audience, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
+       RETURNING *`,
+      [
+        req.user.company_id,
+        form_type,
+        title,
+        description || null,
+        JSON.stringify(schema),
+        JSON.stringify(audience || { type: 'all' }),
+        req.user.id
+      ]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Create template error:', err);
+    res.status(500).json({ error: 'Failed to create form' });
+  }
+});
+
+// Update template
+app.put('/api/forms/templates/:id', authenticateToken, requireFormsManager, async (req, res) => {
+  try {
+    const { title, description, schema, audience } = req.body;
+
+    if (!title || !Array.isArray(schema) || schema.length === 0) {
+      return res.status(400).json({ error: 'title and at least one field are required' });
+    }
+
+    const { rows } = await pool.query(
+      `UPDATE form_templates
+       SET title=$1, description=$2, schema=$3, audience=$4, updated_at=NOW()
+       WHERE id=$5 AND company_id=$6
+       RETURNING *`,
+      [title, description || null, JSON.stringify(schema), JSON.stringify(audience || { type: 'all' }), req.params.id, req.user.company_id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Form not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Update template error:', err);
+    res.status(500).json({ error: 'Failed to update form' });
+  }
+});
+
+// Archive (soft delete) template
+app.patch('/api/forms/templates/:id/archive', authenticateToken, requireFormsManager, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `UPDATE form_templates SET is_active = false, updated_at = NOW()
+       WHERE id = $1 AND company_id = $2
+       RETURNING id`,
+      [req.params.id, req.user.company_id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Form not found' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Archive template error:', err);
+    res.status(500).json({ error: 'Failed to archive form' });
+  }
+});
+
 }
 // Update employee
 app.put('/api/employees/:id', authenticateToken, async (req, res) => {

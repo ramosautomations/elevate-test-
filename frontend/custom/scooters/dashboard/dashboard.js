@@ -128,6 +128,7 @@ function toggleSubmenu(event) {
     event.stopPropagation();
     const el  = document.getElementById('formsNav');
     const sub = document.getElementById('submenu-forms');
+    if (!sub) return;
     const isOpen = sub.classList.contains('open');
     el.classList.toggle('open', !isOpen);
     sub.classList.toggle('open', !isOpen);
