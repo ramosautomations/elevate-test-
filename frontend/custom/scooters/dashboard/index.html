@@ -63,9 +63,6 @@
             <div class="submenu-item" id="nav-store-manager" style="display:none;" onclick="openReview('reviews/manager')">
                 <span class="submenu-dot"></span> Store Manager Review
             </div>
-            <div class="submenu-item" id="nav-manage-forms" style="display:none;" onclick="window.open('/scooters/forms/manage.html','_blank')">
-                <span class="submenu-dot"></span> Manage Forms
-            </div>
         </div>
         <div class="nav-item" onclick="navigate(this, 'customer-reviews')">
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,6 +77,12 @@
             </svg>
             Employee Directory
             <!--<span class="soon-tag">Soon</span>-->
+        </div>
+        <div class="nav-item" id="nav-manage-forms-top" style="display:none;" onclick="navigate(this, 'manage-forms')">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Manage Forms
         </div>
         <div class="nav-item" onclick="navigate(this, 'resources')">
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,6 +238,27 @@
                         </tr>
                     </thead>
                     <tbody id="dirTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <!--------------------------- MANAGE FORMS PANEL ------------------------->
+        <div class="panel" id="panel-manage-forms">
+            <div class="dir-toolbar">
+                <div class="section-title" style="font-size:16px; letter-spacing:0;">Your custom forms</div>
+                <button class="dir-add-btn" onclick="mfOpenModal()">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    New Form
+                </button>
+            </div>
+            <div id="mfEmpty" style="display:none; text-align:center; padding:56px; color:var(--text-muted); font-size:14px;">
+                No custom forms yet. Click "New Form" to build one.
+            </div>
+            <div class="dir-table-card" id="mfTableCard" style="display:none;">
+                <table class="dir-table">
+                    <thead>
+                        <tr><th>Title</th><th>Audience</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="mfTableBody"></tbody>
                 </table>
             </div>
         </div>
@@ -814,6 +838,60 @@
     </div>
 </div>
  
-    <script src="/scooters/dashboard/dashboard.js?v=83"></script>
+    <div class="modal-overlay" id="mfModalOverlay">
+    <div class="modal" id="mfModal" style="width:720px; max-height:88vh; display:flex; flex-direction:column;">
+        <div class="modal-header">
+            <div class="modal-title" id="mfModalTitle">New Form</div>
+            <button class="modal-close" onclick="mfCloseModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="overflow-y:auto;">
+            <div class="form-group full">
+                <label class="form-label">Form Title</label>
+                <input type="text" class="form-input" id="mfTitle" placeholder="e.g. Uniform Request">
+            </div>
+            <div class="form-group full">
+                <label class="form-label">Description</label>
+                <input type="text" class="form-input" id="mfDescription" placeholder="Shown on the form card">
+            </div>
+            <div class="form-group full">
+                <label class="form-label">Who can fill this out?</label>
+                <div style="display:flex; gap:16px; margin-top:6px;">
+                    <label style="display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:500;">
+                        <input type="radio" name="mfAudienceType" value="all" checked onchange="mfOnAudienceChange()"> All employees
+                    </label>
+                    <label style="display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:500;">
+                        <input type="radio" name="mfAudienceType" value="roles" onchange="mfOnAudienceChange()"> Specific roles
+                    </label>
+                </div>
+                <div id="mfRolesBox" style="display:none; margin-top:10px;">
+                    <div id="mfRoleCheckboxes" style="display:flex; gap:16px; flex-wrap:wrap;"></div>
+                </div>
+            </div>
+            <div class="form-group full">
+                <label class="form-label">Fields</label>
+                <div class="mf-field-buttons">
+                    <button type="button" class="mf-add-field-btn" onclick="mfAddField('text')">+ Text</button>
+                    <button type="button" class="mf-add-field-btn" onclick="mfAddField('select')">+ Dropdown</button>
+                    <button type="button" class="mf-add-field-btn" onclick="mfAddField('radio')">+ Multiple Choice</button>
+                    <button type="button" class="mf-add-field-btn" onclick="mfAddField('checkbox')">+ Checkbox</button>
+                    <button type="button" class="mf-add-field-btn" onclick="mfAddField('date')">+ Date</button>
+                </div>
+                <div id="mfFieldsList"></div>
+                <div id="mfFieldsEmpty" style="color:var(--text-muted); font-size:13px; padding:10px 0;">No fields yet — add one above.</div>
+            </div>
+            <div class="form-group full">
+                <label class="form-label">Preview</label>
+                <div id="mfPreviewBox" class="mf-preview-box"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="mfCloseModal()">Cancel</button>
+            <button class="btn-save" onclick="mfSaveTemplate()">Save Form</button>
+        </div>
+    </div>
+</div>
+<script src="/scooters/dashboard/dashboard.js?v=84"></script>
+<script src="/scooters/forms/shared/form-renderer.js?v=1"></script>
+<script src="/scooters/dashboard/manage-forms.js?v=1"></script>
 </body>
 </html>

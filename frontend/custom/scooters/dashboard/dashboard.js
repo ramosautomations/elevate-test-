@@ -104,7 +104,7 @@ function trackResourceClick(key) {
 
         const userRole = (data.role || '').toLowerCase();
         if (['owner', 'general manager'].includes(userRole)) {
-            const manageFormsNav = document.getElementById('nav-manage-forms');
+            const manageFormsNav = document.getElementById('nav-manage-forms-top');
             if (manageFormsNav) manageFormsNav.style.display = 'flex';
         }
 
@@ -127,7 +127,8 @@ function navigate(el, panel) {
     if (panel === 'resources') renderResourcesPage();
     if (panel === 'customer-reviews') revInit();
     if (panel === 'logs') logsInit();
-    const titles = { home: 'Dashboard', forms: 'Documentation', announcements: 'Announcements', directory: 'Employee Directory', resources: 'Resources', reports: 'Reports & Analytics', settings: 'Settings','customer-reviews': 'Customer Reviews', logs: 'Logs' };
+    if (panel === 'manage-forms') mfInit();
+    const titles = { home: 'Dashboard', forms: 'Documentation', announcements: 'Announcements', directory: 'Employee Directory', resources: 'Resources', reports: 'Reports & Analytics', settings: 'Settings','customer-reviews': 'Customer Reviews', logs: 'Logs', 'manage-forms': 'Manage Forms' };
     document.getElementById('pageTitle').textContent = titles[panel] || panel;
 }
 

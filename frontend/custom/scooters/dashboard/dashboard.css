@@ -1146,3 +1146,34 @@
 }
 .logs-tab:hover:not(.active) { border-color: #ccc; color: var(--text-primary); }
 .logs-section { }
+
+/* ── MANAGE FORMS ── */
+.mf-field-buttons { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 14px; }
+.mf-add-field-btn {
+    padding: 7px 14px; font-size: 12.5px; font-weight: 500;
+    border: 1.5px solid var(--red); border-radius: 7px;
+    background: white; color: var(--red); cursor: pointer;
+    font-family: inherit; transition: all 0.15s;
+}
+.mf-add-field-btn:hover { background: var(--red); color: white; }
+.mf-field-card {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; margin-bottom: 10px; background: #fafafa;
+}
+.mf-field-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.mf-field-type-tag {
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--red-dark); background: var(--red-subtle); padding: 3px 8px; border-radius: 5px;
+}
+.mf-field-card-controls { display:flex; gap:5px; }
+.mf-field-card-controls button {
+    padding: 3px 8px; font-size: 11.5px; border: 1px solid var(--border);
+    background: white; border-radius: 5px; cursor: pointer; font-family: inherit;
+}
+.mf-field-card-controls button:hover { background: #f0f0f0; }
+.mf-field-card-controls button.danger { color: var(--red); border-color: var(--red); }
+.mf-field-card .form-label { margin-top: 6px; }
+.mf-required-toggle { display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:500; margin-top:4px; }
+.mf-preview-box { border: 1.5px dashed var(--border); border-radius: 10px; padding: 18px; background: #fcfcfc; }
+.mf-preview-box .form-group { margin-bottom: 12px; }
+.mf-preview-empty { color: var(--text-muted); font-style: italic; font-size: 13px; }
