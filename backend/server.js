@@ -610,6 +610,7 @@ function buildFormPDF(title, employee, location, data) {
   <tbody>${rows}</tbody>
 </table>
 </body></html>`;
+}
 
 // ── FORM TEMPLATES (builder) ──
 
@@ -746,7 +747,6 @@ app.patch('/api/forms/templates/:id/archive', authenticateToken, requireFormsMan
   }
 });
 
-}
 // Update employee
 app.put('/api/employees/:id', authenticateToken, async (req, res) => {
   try {
