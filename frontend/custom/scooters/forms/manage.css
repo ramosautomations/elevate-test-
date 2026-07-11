@@ -1,0 +1,63 @@
+/* Manage Forms - builder-specific styles, layered on top of styles.css */
+
+.manage-table { width: 100%; border-collapse: collapse; }
+.manage-table th {
+    text-align: left; padding: 10px 12px; font-size: 13px; color: #666;
+    border-bottom: 2px solid #e0e0e0;
+}
+.manage-table td {
+    padding: 12px; border-bottom: 1px solid #f0f0f0; font-size: 14px; vertical-align: middle;
+}
+.manage-table tr:hover td { background: #fafafa; }
+
+.badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.badge-active { background: #e7f5ea; color: #1a7a35; }
+.badge-inactive { background: #f0f0f0; color: #888; }
+
+.table-action {
+    background: none; border: none; color: #dc2626; cursor: pointer;
+    font-size: 13px; font-weight: 600; padding: 4px 8px; text-decoration: underline;
+}
+.table-action.muted { color: #888; }
+
+.field-type-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.btn-add-field {
+    padding: 8px 16px; font-size: 13px; font-weight: 600;
+    border: 2px solid #dc2626; border-radius: 6px; background: white; color: #dc2626;
+    cursor: pointer; transition: all 0.2s ease;
+}
+.btn-add-field:hover { background: #dc2626; color: white; }
+
+.field-card {
+    border: 2px solid #e0e0e0; border-radius: 8px; padding: 16px;
+    margin-bottom: 12px; background: #fafafa;
+}
+.field-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.field-type-tag {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; color: #991b1b;
+    background: #fdecea; padding: 3px 8px; border-radius: 4px;
+}
+.field-card-controls { display: flex; gap: 6px; }
+.field-card-controls button {
+    padding: 4px 8px; font-size: 12px; border: 1px solid #d0d0d0;
+    background: white; border-radius: 4px; cursor: pointer;
+}
+.field-card-controls button:hover { background: #f0f0f0; }
+.field-card-controls button.danger { color: #dc2626; border-color: #dc2626; }
+
+.field-card label { font-size: 12px; margin-bottom: 4px; }
+.field-card input[type="text"], .field-card textarea {
+    padding: 8px 10px; font-size: 13px; width: 100%; margin-bottom: 10px;
+}
+.field-card .required-toggle {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; margin-bottom: 10px;
+}
+
+.role-checkboxes { display: flex; flex-wrap: wrap; gap: 16px; }
+.role-checkboxes label { display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 14px; }
+
+.preview-box {
+    border: 2px dashed #e0e0e0; border-radius: 8px; padding: 24px; background: #fcfcfc;
+}
+.preview-box .form-group { margin-bottom: 16px; }
+.preview-box p.preview-empty { color: #aaa; font-style: italic; }

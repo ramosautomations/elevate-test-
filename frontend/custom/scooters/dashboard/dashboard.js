@@ -101,6 +101,13 @@ function trackResourceClick(key) {
         } else {
             window._showAdminForms = false;
         }
+
+        const userRole = (data.role || '').toLowerCase();
+        if (['owner', 'general manager'].includes(userRole)) {
+            const manageFormsNav = document.getElementById('nav-manage-forms');
+            if (manageFormsNav) manageFormsNav.style.display = 'flex';
+        }
+
         renderQuickAccess();
         if (document.getElementById('panel-forms') && document.getElementById('panel-forms').classList.contains('active')) renderFormsPage();
         revLoad();

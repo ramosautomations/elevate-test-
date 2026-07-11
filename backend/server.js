@@ -641,16 +641,12 @@ app.get('/api/forms/templates/available', authenticateToken, async (req, res) =>
       [req.user.company_id]
     );
 
-    const { rows: empRows } = await pool.query(
-      'SELECT title FROM employees WHERE name = $1 AND company_id = $2',
-      [req.user.name || '', req.user.company_id]
-    );
-    const myTitle = (empRows[0]?.title || '').toLowerCase();
+    const myRole = (req.user.role || '').toLowerCase();
 
     const visible = rows.filter(t => {
       const aud = t.audience || { type: 'all' };
       if (aud.type === 'all') return true;
-      if (aud.type === 'roles') return aud.roles.some(r => r.toLowerCase() === myTitle);
+      if (aud.type === 'roles') return (aud.roles || []).some(r => r.toLowerCase() === myRole);
       if (aud.type === 'employees') return aud.employee_ids?.includes(req.user.id);
       return false;
     });
