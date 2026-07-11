@@ -677,17 +677,18 @@ app.get('/api/forms/templates/:id', authenticateToken, async (req, res) => {
 // Create template
 app.post('/api/forms/templates', authenticateToken, requireFormsManager, async (req, res) => {
   try {
-    const { title, description, schema, audience } = req.body;
+    const { title, description, schema, audience, category } = req.body;
 
     if (!title || !Array.isArray(schema) || schema.length === 0) {
       return res.status(400).json({ error: 'title and at least one field are required' });
     }
+    const safeCategory = ['documentation', 'resource'].includes(category) ? category : 'documentation';
 
     const form_type = 'custom-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
 
     const { rows } = await pool.query(
-      `INSERT INTO form_templates (company_id, form_type, title, description, schema, audience, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
+      `INSERT INTO form_templates (company_id, form_type, title, description, schema, audience, category, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
        RETURNING *`,
       [
         req.user.company_id,
@@ -696,6 +697,7 @@ app.post('/api/forms/templates', authenticateToken, requireFormsManager, async (
         description || null,
         JSON.stringify(schema),
         JSON.stringify(audience || { type: 'all' }),
+        safeCategory,
         req.user.id
       ]
     );
@@ -709,18 +711,19 @@ app.post('/api/forms/templates', authenticateToken, requireFormsManager, async (
 // Update template
 app.put('/api/forms/templates/:id', authenticateToken, requireFormsManager, async (req, res) => {
   try {
-    const { title, description, schema, audience } = req.body;
+    const { title, description, schema, audience, category } = req.body;
 
     if (!title || !Array.isArray(schema) || schema.length === 0) {
       return res.status(400).json({ error: 'title and at least one field are required' });
     }
+    const safeCategory = ['documentation', 'resource'].includes(category) ? category : 'documentation';
 
     const { rows } = await pool.query(
       `UPDATE form_templates
-       SET title=$1, description=$2, schema=$3, audience=$4, updated_at=NOW()
-       WHERE id=$5 AND company_id=$6
+       SET title=$1, description=$2, schema=$3, audience=$4, category=$5, updated_at=NOW()
+       WHERE id=$6 AND company_id=$7
        RETURNING *`,
-      [title, description || null, JSON.stringify(schema), JSON.stringify(audience || { type: 'all' }), req.params.id, req.user.company_id]
+      [title, description || null, JSON.stringify(schema), JSON.stringify(audience || { type: 'all' }), safeCategory, req.params.id, req.user.company_id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Form not found' });
     res.json(rows[0]);

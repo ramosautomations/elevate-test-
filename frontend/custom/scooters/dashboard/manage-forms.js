@@ -72,6 +72,7 @@ function mfOpenModal(existing) {
     mfSchema = existing ? JSON.parse(JSON.stringify(existing.schema)) : [];
     const audience = existing ? existing.audience : { type: 'all' };
 
+    document.querySelectorAll('input[name="mfCategory"]').forEach(r => { r.checked = r.value === (existing ? existing.category : 'documentation'); });
     document.querySelectorAll('input[name="mfAudienceType"]').forEach(r => { r.checked = r.value === (audience.type || 'all'); });
     document.querySelectorAll('.mfRoleCheckbox').forEach(cb => { cb.checked = (audience.roles || []).includes(cb.value); });
     mfOnAudienceChange();
@@ -198,7 +199,8 @@ async function mfSaveTemplate() {
         audience.roles = roles;
     }
 
-    const payload = { title, description, schema: mfSchema, audience };
+    const category = document.querySelector('input[name="mfCategory"]:checked').value;
+    const payload = { title, description, schema: mfSchema, audience, category };
     const url = mfEditingId ? `/api/forms/templates/${mfEditingId}` : '/api/forms/templates';
     const method = mfEditingId ? 'PUT' : 'POST';
 
