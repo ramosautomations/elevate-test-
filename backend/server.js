@@ -97,9 +97,9 @@ app.post('/auth/login', async (req, res) => {
   try {
     // Get user with company slug
     const { rows } = await pool.query(`
-      SELECT u.*, c.slug as company_slug 
-      FROM users u 
-      LEFT JOIN companies c ON u.company_id = c.id 
+      SELECT u.*, c.slug as company_slug, c.build_type as company_build_type
+      FROM users u
+      LEFT JOIN companies c ON u.company_id = c.id
       WHERE u.email = $1
     `, [email]);
     
@@ -142,7 +142,9 @@ app.post('/auth/login', async (req, res) => {
     });
     
     // Redirect to company dashboard
-    const dashboardUrl = user.company_slug ? `/${user.company_slug}/dashboard/` : '/dashboard/';
+    const dashboardUrl = (user.company_build_type === 'custom' && user.company_slug)
+      ? `/${user.company_slug}/dashboard/`
+      : '/dashboard/';
     res.redirect(dashboardUrl);
     
   } catch (err) {
@@ -196,6 +198,22 @@ app.get('/api/test', async (req, res) => {
   }
 });
 
+// Company config
+app.get('/api/company-config', authenticateToken, async (req, res) => {
+  if (!req.user.company_id) return res.status(400).json({ error: 'No company_id on session' });
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, name, slug, build_type, logo_url, primary_color, secondary_color, features FROM companies WHERE id = $1',
+      [req.user.company_id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Company not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Company config error:', err);
+    res.status(500).json({ error: 'Failed to fetch company config' });
+  }
+});
+
 // Get all employees (filtered by user role and location)
 // Get all employees unfiltered (for supervisor dropdowns)
 app.get('/api/employees/all', authenticateToken, async (req, res) => {
@@ -204,6 +222,7 @@ app.get('/api/employees/all', authenticateToken, async (req, res) => {
       SELECT id, name, title, location, status
       FROM employees
       WHERE company_id = $1
+      AND archived_at IS NULL
       AND LOWER(title) IN ('general manager', 'manager', 'assistant manager', 'owner')
       AND status = 'Active'
       ORDER BY name ASC
@@ -218,22 +237,24 @@ app.get('/api/employees/all', authenticateToken, async (req, res) => {
 app.get('/api/employees', authenticateToken, async (req, res) => {
   try {
     const user = req.user;
-    
+    const showArchived = req.query.archived === 'true';
+
     // Get user details including location and role
     const { rows: userRows } = await pool.query(
       'SELECT location, role, is_admin FROM users WHERE id = $1',
       [user.id]
     );
-    
+
     const currentUser = userRows[0];
-    
+
     let query = `
       SELECT id, name, title, department, location,
        email, phone, supervisor, status, hire_date,
        employment_type, pay_type, pay_amount, termination_date,
-       employee_code
+       employee_code, archived_at
       FROM employees
       WHERE company_id = $1
+      AND archived_at IS ${showArchived ? 'NOT NULL' : 'NULL'}
     `;
 
     const params = [user.company_id];
