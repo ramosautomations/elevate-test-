@@ -636,7 +636,7 @@ app.get('/api/forms/templates', authenticateToken, requireFormsManager, async (r
 app.get('/api/forms/templates/available', authenticateToken, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT id, form_type, title, description, audience
+      `SELECT id, form_type, title, description, audience, category
        FROM form_templates
        WHERE company_id = $1 AND is_active = true`,
       [req.user.company_id]
