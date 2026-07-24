@@ -510,6 +510,12 @@ function renderDirTable(employees) {
   var chevron = '<svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">'
     + '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
 
+  var personIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+    + ' stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + '<circle cx="12" cy="8" r="4"/>'
+    + '<path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>'
+    + '</svg>';
+
   var rows = sorted.map(function(emp) {
     var statusCell;
     if (emp.archived_at) {
@@ -522,6 +528,7 @@ function renderDirTable(employees) {
     }
 
     return '<tr class="dir-row" onclick="openDirModal(' + emp.id + ')">'
+      + '<td><div class="dir-row-avatar">' + personIcon + '</div></td>'
       + '<td class="dir-emp-code">' + esc(emp.employee_code || '--') + '</td>'
       + '<td class="dir-name">' + esc(emp.name || '--') + '</td>'
       + '<td>' + esc(emp.title || '--') + '</td>'
@@ -535,6 +542,7 @@ function renderDirTable(employees) {
   var statusKey = dirViewArchived ? 'archived_at' : 'status';
   body.innerHTML = '<div class="dir-table-wrap"><table class="dir-table">'
     + '<thead><tr>'
+    + '<th></th>'
     + dirSortTh('ID', 'employee_code')
     + dirSortTh('Name', 'name')
     + dirSortTh('Title', 'title')

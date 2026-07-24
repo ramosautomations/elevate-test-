@@ -684,6 +684,20 @@ body {
 .dir-table tbody td:first-child { padding-left: 0; }
 .dir-table tbody tr:last-child td { border-bottom: none; }
 
+/* ---- Row avatar placeholder ---- */
+.dir-row-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--track);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
 /* ---- ID + Name cells ---- */
 .dir-emp-code {
     font-size: 12.5px;
@@ -929,8 +943,8 @@ body {
     .dir-search-wrap { max-width: none; }
     .dir-detail-grid { grid-template-columns: 1fr; }
     /* Hide Department column on narrow screens */
-    .dir-table thead th:nth-child(4),
-    .dir-table tbody td:nth-child(4) { display: none; }
+    .dir-table thead th:nth-child(5),
+    .dir-table tbody td:nth-child(5) { display: none; }
 }
 
 /* ================================================================
