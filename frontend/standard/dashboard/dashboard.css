@@ -684,26 +684,12 @@ body {
 .dir-table tbody td:first-child { padding-left: 0; }
 .dir-table tbody tr:last-child td { border-bottom: none; }
 
-/* ---- Avatar ---- */
-.dir-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    flex-shrink: 0;
-    user-select: none;
+/* ---- ID + Name cells ---- */
+.dir-emp-code {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    white-space: nowrap;
 }
-
-.dir-avatar.tint-orange { background: var(--tint-orange); color: var(--icon-orange); }
-.dir-avatar.tint-green  { background: var(--tint-green);  color: var(--icon-green);  }
-.dir-avatar.tint-blue   { background: var(--tint-blue);   color: var(--icon-blue);   }
-.dir-avatar.tint-violet { background: var(--tint-violet); color: var(--icon-violet); }
-
-/* ---- Name cell ---- */
 .dir-name {
     font-weight: 500;
     white-space: nowrap;

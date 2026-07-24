@@ -230,7 +230,8 @@ app.get('/api/employees', authenticateToken, async (req, res) => {
     let query = `
       SELECT id, name, title, department, location,
        email, phone, supervisor, status, hire_date,
-       employment_type, pay_type, pay_amount, termination_date
+       employment_type, pay_type, pay_amount, termination_date,
+       employee_code
       FROM employees
       WHERE company_id = $1
     `;
@@ -276,7 +277,7 @@ app.post('/api/employees', authenticateToken, async (req, res) => {
     const {
       name, title, department, location, email, phone,
       supervisor, hire_date, status, employment_type,
-      pay_type, pay_amount, termination_date
+      pay_type, pay_amount, termination_date, employee_code
     } = req.body;
 
     if (!name || !title || !location) {
@@ -287,9 +288,9 @@ app.post('/api/employees', authenticateToken, async (req, res) => {
       INSERT INTO employees
         (name, title, department, location, email, phone, supervisor,
          hire_date, status, employment_type, pay_type, pay_amount,
-         termination_date, company_id, created_by)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
-      RETURNING id, name, title, location, status, hire_date
+         termination_date, company_id, created_by, employee_code)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+      RETURNING id, name, title, location, status, hire_date, employee_code
     `, [
       name,
       title,
@@ -305,7 +306,8 @@ app.post('/api/employees', authenticateToken, async (req, res) => {
       pay_amount    || null,
       termination_date || null,
       req.user.company_id,
-      req.user.id
+      req.user.id,
+      employee_code || null
     ]);
 
     res.status(201).json(rows[0]);
@@ -313,6 +315,9 @@ app.post('/api/employees', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Add employee error:', err);
     if (err.code === '23505') {
+      if (err.constraint === 'employees_employee_code_company_key') {
+        return res.status(409).json({ error: 'An employee with that Employee ID already exists' });
+      }
       return res.status(409).json({ error: 'An employee with that email already exists' });
     }
     res.status(500).json({ error: 'Failed to add employee' });
@@ -326,16 +331,17 @@ app.get('/api/employees/:id', authenticateToken, async (req, res) => {
     const { rows } = await pool.query(
       `SELECT id, name, title, department, location,
               email, phone, supervisor, status, hire_date,
-              employment_type, pay_type, pay_amount, termination_date
+              employment_type, pay_type, pay_amount, termination_date,
+              employee_code
        FROM employees
        WHERE id = $1 AND company_id = $2`,
       [employeeId, req.user.company_id]
     );
-    
+
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Employee not found' });
     }
-    
+
     res.json(rows[0]);
   } catch (error) {
     console.error('Error fetching employee:', error);
@@ -608,7 +614,7 @@ app.put('/api/employees/:id', authenticateToken, async (req, res) => {
     const {
       name, title, department, location, email, phone,
       supervisor, hire_date, status, employment_type,
-      pay_type, pay_amount, termination_date
+      pay_type, pay_amount, termination_date, employee_code
     } = req.body;
 
     if (!name || !title || !location) {
@@ -630,16 +636,18 @@ app.put('/api/employees/:id', authenticateToken, async (req, res) => {
         pay_type         = $11,
         pay_amount       = $12,
         termination_date = $13,
-        updated_by       = $14
-      WHERE id = $15 AND company_id = $16
-      RETURNING id, name, title, location, status
+        updated_by       = $14,
+        employee_code    = $15
+      WHERE id = $16 AND company_id = $17
+      RETURNING id, name, title, location, status, employee_code
     `, [
       name, title, department || null, location,
       email || null, phone || null, supervisor || null,
       hire_date || null, status || 'active',
       employment_type || 'full-time', pay_type || 'hourly',
       pay_amount || null, termination_date || null,
-      req.user.id, req.params.id, req.user.company_id
+      req.user.id, employee_code || null,
+      req.params.id, req.user.company_id
     ]);
 
     if (rows.length === 0) {
@@ -650,6 +658,12 @@ app.put('/api/employees/:id', authenticateToken, async (req, res) => {
 
   } catch (err) {
     console.error('Update employee error:', err);
+    if (err.code === '23505') {
+      if (err.constraint === 'employees_employee_code_company_key') {
+        return res.status(409).json({ error: 'An employee with that Employee ID already exists' });
+      }
+      return res.status(409).json({ error: 'An employee with that email already exists' });
+    }
     res.status(500).json({ error: 'Failed to update employee' });
   }
 });

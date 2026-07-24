@@ -433,9 +433,10 @@ function applyDirFilters() {
 
   var filtered = data.filter(function(e) {
     var matchQ = !q
-      || (e.name     && e.name.toLowerCase().indexOf(q)     !== -1)
-      || (e.title    && e.title.toLowerCase().indexOf(q)    !== -1)
-      || (e.location && e.location.toLowerCase().indexOf(q) !== -1);
+      || (e.employee_code && e.employee_code.toLowerCase().indexOf(q) !== -1)
+      || (e.name          && e.name.toLowerCase().indexOf(q)          !== -1)
+      || (e.title         && e.title.toLowerCase().indexOf(q)         !== -1)
+      || (e.location      && e.location.toLowerCase().indexOf(q)      !== -1);
     var matchLoc    = !loc    || e.location === loc;
     var matchStatus = !status || e.status   === status;
     return matchQ && matchLoc && matchStatus;
@@ -510,8 +511,6 @@ function renderDirTable(employees) {
     + '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
 
   var rows = sorted.map(function(emp) {
-    var idx       = currentData ? currentData.indexOf(emp) : 0;
-    var tintClass = DIR_TINTS[idx % 4];
     var statusCell;
     if (emp.archived_at) {
       statusCell = '<span class="dir-pill dir-pill-archived">Archived</span>'
@@ -523,7 +522,7 @@ function renderDirTable(employees) {
     }
 
     return '<tr class="dir-row" onclick="openDirModal(' + emp.id + ')">'
-      + '<td><div class="dir-avatar ' + tintClass + '">' + esc(dirInitials(emp.name)) + '</div></td>'
+      + '<td class="dir-emp-code">' + esc(emp.employee_code || '--') + '</td>'
       + '<td class="dir-name">' + esc(emp.name || '--') + '</td>'
       + '<td>' + esc(emp.title || '--') + '</td>'
       + '<td>' + esc(emp.department || '--') + '</td>'
@@ -536,7 +535,7 @@ function renderDirTable(employees) {
   var statusKey = dirViewArchived ? 'archived_at' : 'status';
   body.innerHTML = '<div class="dir-table-wrap"><table class="dir-table">'
     + '<thead><tr>'
-    + '<th></th>'
+    + dirSortTh('ID', 'employee_code')
     + dirSortTh('Name', 'name')
     + dirSortTh('Title', 'title')
     + dirSortTh('Department', 'department')
@@ -564,15 +563,16 @@ function exportDirCsv() {
     return '"' + (val == null ? '' : String(val)).replace(/"/g, '""') + '"';
   }
 
-  var headers = ['Name','Title','Department','Location','Status','Email','Phone','Supervisor','Hire Date'];
+  var headers = ['Employee ID','Name','Title','Department','Location','Status','Email','Phone','Supervisor','Hire Date'];
   if (isArchived) headers.push('Archived On');
   var lines = [headers.map(csvCell).join(',')];
 
   data.forEach(function(emp) {
     var status = emp.archived_at ? 'Archived' : (emp.status || '');
     var row = [
-      emp.name        || '',
-      emp.title       || '',
+      emp.employee_code || '',
+      emp.name          || '',
+      emp.title         || '',
       emp.department  || '',
       emp.location    || '',
       status,
@@ -639,6 +639,7 @@ function openDirModal(empId) {
 
   /* Field list - pay_type and pay_amount intentionally excluded */
   var fields = [
+    ['Employee ID',      emp.employee_code],
     ['Title',            emp.title],
     ['Department',       emp.department],
     ['Location',         emp.location],
@@ -851,11 +852,11 @@ function resetAddEmpForm() {
 }
 
 function clearAddEmpErrors() {
-  ['errName', 'errTitle', 'errLoc', 'errEmail'].forEach(function(id) {
+  ['errCode', 'errName', 'errTitle', 'errLoc', 'errEmail'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.textContent = '';
   });
-  ['fName', 'fTitle', 'fLoc', 'fEmail'].forEach(function(id) {
+  ['fCode', 'fName', 'fTitle', 'fLoc', 'fEmail'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.classList.remove('input-error');
   });
@@ -897,6 +898,7 @@ function submitAddEmp(event) {
   var phone   = (document.getElementById('fPhone').value   || '').trim();
   var status  = document.getElementById('fStatus').value;
   var empType = document.getElementById('fEmpType').value;
+  var code    = (document.getElementById('fCode').value    || '').trim();
   var hire    = document.getElementById('fHire').value;
 
   /* Client-side validation */
@@ -915,7 +917,8 @@ function submitAddEmp(event) {
     title:           title,
     location:        loc,
     status:          status  || 'active',
-    employment_type: empType || 'full-time'
+    employment_type: empType || 'full-time',
+    employee_code:   code    || null
   };
   if (dept)  payload.department = dept;
   if (sup)   payload.supervisor = sup;
@@ -961,7 +964,12 @@ function submitAddEmp(event) {
       initDirectory();
       showDirSuccessBanner(empFormMode === 'edit' ? 'Employee updated successfully.' : 'Employee added successfully.');
     } else if (r.status === 409) {
-      setFieldError('fEmail', 'errEmail', 'An employee with that email already exists.');
+      var msg409 = (r.data && r.data.error) || '';
+      if (msg409.toLowerCase().indexOf('email') !== -1) {
+        setFieldError('fEmail', 'errEmail', msg409 || 'An employee with that email already exists.');
+      } else {
+        setFieldError('fCode', 'errCode', msg409 || 'That Employee ID is already in use.');
+      }
     } else if (r.status === 404) {
       setAddEmpBanner('error', 'Employee not found. They may have been removed.');
     } else if (r.status === 400) {
@@ -1030,6 +1038,7 @@ function openEditEmpModal(empId) {
     var el = document.getElementById(id);
     if (el) el.value = val != null ? val : '';
   };
+  setVal('fCode',  emp.employee_code);
   setVal('fName',  emp.name);
   setVal('fTitle', emp.title);
   setVal('fDept',  emp.department);
@@ -1120,7 +1129,8 @@ function setInactiveForArchive(empId) {
     employment_type:  emp.employment_type  || 'full-time',
     pay_type:         emp.pay_type         || 'hourly',
     pay_amount:       emp.pay_amount != null ? emp.pay_amount : null,
-    termination_date: emp.termination_date  || null
+    termination_date: emp.termination_date  || null,
+    employee_code:    emp.employee_code    || null
   };
   if (emp.department) payload.department = emp.department;
   if (emp.supervisor) payload.supervisor  = emp.supervisor;
