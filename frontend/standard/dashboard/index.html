@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/standard/dashboard/dashboard.css?v=12">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+        <img id="companyLogo" src="/images/elevate_logo_white.png" alt="Company Logo" class="logo-img" onerror="this.style.display='none'">
+    </div>
+
+    <nav class="nav">
+        <div id="companyName" class="company-name">Employee Portal</div>
+        <div class="nav-label">MAIN</div>
+
+        <div class="nav-item active" data-section="dashboard" data-label="Dashboard" onclick="navigate(this)">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 13a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/>
+            </svg>
+            Dashboard
+        </div>
+
+        <div class="nav-item" data-section="directory" data-label="Directory" onclick="navigate(this)">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Directory
+        </div>
+
+        <div class="nav-item" data-section="forms" data-label="Forms" onclick="navigate(this)">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Forms
+        </div>
+
+        <div class="nav-item" data-section="customer_reviews" data-label="Reviews" onclick="navigate(this)">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+            </svg>
+            Reviews
+        </div>
+
+        <div class="nav-item" data-section="logs" data-label="Logs" onclick="navigate(this)">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Logs
+        </div>
+
+        <div class="nav-item" data-section="resources" data-label="Resources" onclick="navigate(this)">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+            </svg>
+            Resources
+        </div>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a href="/auth/logout" class="logout-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Sign Out
+        </a>
+    </div>
+</aside>
+
+<!-- PAGE SHELL -->
+<div class="page">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+        <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Open menu">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
+
+        <div class="search-wrap">
+            <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input class="search-input" type="text" placeholder="Search people, forms...">
+        </div>
+
+        <div class="topbar-right">
+            <button class="icon-btn" aria-label="Notifications">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+            </button>
+            <div class="user-chip">
+                <div class="avatar" id="userAvatar">EU</div>
+                <span class="user-name" id="userName">Employee</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="content">
+
+        <!-- DASHBOARD SECTION (default) -->
+        <section class="section active" id="section-dashboard">
+            <h1 class="page-heading">Dashboard</h1>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon tint-orange">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <div class="kpi-body">
+                        <div class="kpi-value" id="kpiTotal">--</div>
+                        <div class="kpi-label">Total Employees</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon tint-green">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zM19 20a7 7 0 10-14 0"/>
+                        </svg>
+                    </div>
+                    <div class="kpi-body">
+                        <div class="kpi-value" id="kpiActive">--</div>
+                        <div class="kpi-label">Active Staff</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon tint-blue">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="kpi-body">
+                        <div class="kpi-value" id="kpiForms">--</div>
+                        <div class="kpi-label">Forms This Month</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon tint-violet">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                        </svg>
+                    </div>
+                    <div class="kpi-body">
+                        <div class="kpi-value" id="kpiReviews">--</div>
+                        <div class="kpi-label">Reviews Due</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart row 1: bar + donut -->
+            <div class="chart-row">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Form Submissions Trend</span>
+                    </div>
+                    <div class="chart-wrap">
+                        <canvas id="chartSubmissions"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Forms by Type</span>
+                    </div>
+                    <div class="chart-wrap chart-donut-wrap">
+                        <canvas id="chartDonut"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart row 2: activity + highlight -->
+            <div class="chart-row">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Activity</span>
+                        <span class="card-subtitle">Last 7 days</span>
+                    </div>
+                    <div class="chart-wrap">
+                        <canvas id="chartActivity"></canvas>
+                    </div>
+                </div>
+                <div class="highlight-card">
+                    <div class="hl-value" id="hlValue">--</div>
+                    <div class="hl-label" id="hlLabel">--</div>
+                    <div class="chart-wrap chart-spark-wrap">
+                        <canvas id="chartSparkline"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Headcount by location -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Headcount by Location</span>
+                </div>
+                <div id="locList" class="loc-list"></div>
+            </div>
+        </section>
+
+        <!-- Directory section -->
+        <section class="section" id="section-directory">
+            <div class="card dir-card">
+                <div class="dir-header">
+                    <div class="dir-hd-row">
+                        <div class="dir-hd-left">
+                            <span class="card-title">Directory</span>
+                            <span class="dir-count" id="dirCount"></span>
+                        </div>
+                        <div class="dir-hd-actions">
+                            <div class="dir-view-seg">
+                                <button class="dir-seg-btn active" id="dirSegActive" onclick="switchDirView(false)">Active</button>
+                                <button class="dir-seg-btn" id="dirSegArchived" onclick="switchDirView(true)">Archived</button>
+                            </div>
+                            <button class="dir-export-btn" onclick="exportDirCsv()">Export CSV</button>
+                            <button class="dir-add-btn" id="dirAddBtn" onclick="openAddEmpModal()">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Add Employee
+                            </button>
+                        </div>
+                    </div>
+                    <div class="dir-controls">
+                        <div class="search-wrap dir-search-wrap">
+                            <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <input class="search-input" type="text" id="dirSearch" placeholder="Search name, title, location..." oninput="applyDirFilters()">
+                        </div>
+                        <select id="dirFilterLoc" class="dir-select" onchange="applyDirFilters()">
+                            <option value="">All Locations</option>
+                        </select>
+                        <select id="dirFilterStatus" class="dir-select" onchange="applyDirFilters()">
+                            <option value="">All Status</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="dirRetentionNotice" class="dir-retention-notice" style="display:none">Archived employees and their documents are retained for 6 months, then permanently deleted.</div>
+                <div id="dirBanner" class="form-banner" role="status"></div>
+                <div id="dirBody"></div>
+            </div>
+
+            <!-- Employee detail modal -->
+            <div class="dir-overlay" id="dirOverlay" onclick="closeDirModal()">
+                <div class="dir-modal dir-modal--wide" onclick="event.stopPropagation()">
+                    <div class="dir-modal-hd" id="dirModalHd"></div>
+                    <div class="dir-modal-tabs">
+                        <button class="dir-tab active" id="dirTabInfo" onclick="switchDirTab('info')">Info</button>
+                        <button class="dir-tab" id="dirTabDocs" onclick="switchDirTab('docs')">Documents</button>
+                    </div>
+                    <div class="dir-modal-body" id="dirModalInfoBody"></div>
+                    <div class="dir-modal-body" id="dirModalDocsBody" style="display:none"></div>
+                </div>
+            </div>
+
+            <!-- Add Employee modal -->
+            <div class="dir-overlay" id="addEmpOverlay" onclick="closeAddEmpModal()">
+                <div class="dir-modal" onclick="event.stopPropagation()">
+                    <div class="dir-modal-hd">
+                        <div class="dir-modal-info">
+                            <div class="dir-modal-name" id="empFormTitle">Add Employee</div>
+                        </div>
+                        <button class="dir-modal-close" onclick="closeAddEmpModal()" aria-label="Close">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="dir-modal-body">
+                        <form id="addEmpForm" onsubmit="submitAddEmp(event)" novalidate>
+                            <div class="form-banner" id="addEmpBanner" role="alert"></div>
+
+                            <div class="form-section">
+                                <div class="form-section-title">Basic Info</div>
+                                <div class="form-group">
+                                    <div class="form-field">
+                                        <label class="form-label" for="fName">Name <span class="req">*</span></label>
+                                        <input class="form-input" type="text" id="fName" name="name" autocomplete="name">
+                                        <div class="field-error" id="errName"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-2">
+                                    <div class="form-field">
+                                        <label class="form-label" for="fTitle">Title <span class="req">*</span></label>
+                                        <input class="form-input" type="text" id="fTitle" name="title">
+                                        <div class="field-error" id="errTitle"></div>
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="fDept">Department</label>
+                                        <input class="form-input" type="text" id="fDept" name="department">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="form-section-title">Location</div>
+                                <div class="form-group form-group-2">
+                                    <div class="form-field">
+                                        <label class="form-label" for="fLoc">Location <span class="req">*</span></label>
+                                        <input class="form-input" type="text" id="fLoc" name="location" list="locOptions" autocomplete="off">
+                                        <datalist id="locOptions"></datalist>
+                                        <div class="field-error" id="errLoc"></div>
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="fSup">Supervisor</label>
+                                        <input class="form-input" type="text" id="fSup" name="supervisor" list="supOptions" autocomplete="off">
+                                        <datalist id="supOptions"></datalist>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="form-section-title">Contact</div>
+                                <div class="form-group form-group-2">
+                                    <div class="form-field">
+                                        <label class="form-label" for="fEmail">Email</label>
+                                        <input class="form-input" type="email" id="fEmail" name="email" autocomplete="email">
+                                        <div class="field-error" id="errEmail"></div>
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="fPhone">Phone</label>
+                                        <input class="form-input" type="tel" id="fPhone" name="phone" autocomplete="tel">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="form-section-title">Employment</div>
+                                <div class="form-group form-group-3">
+                                    <div class="form-field">
+                                        <label class="form-label" for="fStatus">Status</label>
+                                        <select class="form-input" id="fStatus" name="status">
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                            <option value="terminated">Terminated</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="fEmpType">Employment Type</label>
+                                        <select class="form-input" id="fEmpType" name="employment_type">
+                                            <option value="full-time">Full-time</option>
+                                            <option value="part-time">Part-time</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="fHire">Hire Date</label>
+                                        <input class="form-input" type="date" id="fHire" name="hire_date">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-footer">
+                                <button type="button" class="btn-cancel" onclick="closeAddEmpModal()">Cancel</button>
+                                <button type="submit" class="btn-submit" id="addEmpSubmit">Add Employee</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="section-forms">
+            <h1 class="page-heading">Forms</h1>
+            <p class="placeholder-msg">HR forms coming soon.</p>
+        </section>
+
+        <section class="section" id="section-customer_reviews">
+            <h1 class="page-heading">Reviews</h1>
+            <p class="placeholder-msg">Customer reviews coming soon.</p>
+        </section>
+
+        <section class="section" id="section-logs">
+            <h1 class="page-heading">Logs</h1>
+            <p class="placeholder-msg">Activity logs coming soon.</p>
+        </section>
+
+        <section class="section" id="section-resources">
+            <h1 class="page-heading">Resources</h1>
+            <p class="placeholder-msg">Resources and documents coming soon.</p>
+        </section>
+    </main>
+</div><!-- .page -->
+
+<script src="/js/chart.min.js"></script>
+<script src="/standard/dashboard/dashboard.js?v=14"></script>
+</body>
+</html>
