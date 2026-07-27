@@ -808,7 +808,7 @@ function esc(s) {
 
 /* ESC key closes whichever modal is open */
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') { closeDirModal(); closeAddEmpModal(); }
+  if (e.key === 'Escape') { closeDirModal(); closeAddEmpModal(); closeImportModal(); }
 });
 
 /* ================================================================
@@ -1330,4 +1330,252 @@ function switchToActiveView() {
   if (segArchived) { segArchived.classList.remove('active'); }
   if (addBtn) addBtn.style.display = '';
   if (notice) notice.style.display = 'none';
+}
+
+/* ================================================================
+   CSV IMPORT
+================================================================ */
+
+function openImportModal() {
+  var overlay = document.getElementById('csvImportOverlay');
+  if (!overlay) return;
+  var fileInput = document.getElementById('csvFileInput');
+  if (fileInput) fileInput.value = '';
+  var preview = document.getElementById('csvImportPreview');
+  if (preview) preview.innerHTML = '';
+  overlay.classList.add('open');
+}
+
+function closeImportModal() {
+  var overlay = document.getElementById('csvImportOverlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+function downloadCsvTemplate() {
+  function csvCell(val) {
+    return '"' + (val == null ? '' : String(val)).replace(/"/g, '""') + '"';
+  }
+  var headers = ['Employee ID','Name','Title','Department','Location','Status','Email','Phone','Supervisor','Hire Date','Employment Type'];
+  var sample  = ['EMP-001','Jane Smith','Store Associate','Retail','Downtown','active','jane.smith@example.com','555-0100','John Manager','2024-01-15','full-time'];
+  var lines   = [headers.map(csvCell).join(','), sample.map(csvCell).join(',')];
+  var blob    = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+  var url     = URL.createObjectURL(blob);
+  var a       = document.createElement('a');
+  a.href      = url;
+  a.download  = 'employee-import-template.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* Robust CSV parser: handles quoted fields, commas and escaped quotes inside
+   quoted fields, trims field whitespace, skips fully blank lines.
+   Returns { headers: [...], rows: [{header: value, ...}, ...] }. */
+function parseCsvRobust(text) {
+  var allRows = [];
+  var row     = [];
+  var field   = '';
+  var inQ     = false;
+  var i       = 0;
+  var len     = text.length;
+
+  while (i < len) {
+    var ch = text[i];
+    if (inQ) {
+      if (ch === '"') {
+        if (i + 1 < len && text[i + 1] === '"') { field += '"'; i += 2; }
+        else { inQ = false; i++; }
+      } else { field += ch; i++; }
+    } else {
+      if (ch === '"') { inQ = true; i++; }
+      else if (ch === ',') { row.push(field.trim()); field = ''; i++; }
+      else if (ch === '\r' || ch === '\n') {
+        if (ch === '\r' && i + 1 < len && text[i + 1] === '\n') i++;
+        row.push(field.trim());
+        allRows.push(row);
+        row = []; field = ''; i++;
+      } else { field += ch; i++; }
+    }
+  }
+  if (field !== '' || row.length > 0) { row.push(field.trim()); allRows.push(row); }
+
+  /* Drop fully blank rows */
+  allRows = allRows.filter(function(r) { return r.some(function(f) { return f !== ''; }); });
+  if (allRows.length === 0) return { headers: [], rows: [] };
+
+  var headers  = allRows[0];
+  var dataRows = [];
+  for (var r = 1; r < allRows.length; r++) {
+    var obj = {};
+    headers.forEach(function(h, idx) { obj[h] = allRows[r][idx] || ''; });
+    dataRows.push(obj);
+  }
+  return { headers: headers, rows: dataRows };
+}
+
+function validateImportRows(rows, existingData) {
+  /* Build lookup sets from existing employees */
+  var existingEmails = {};
+  var existingCodes  = {};
+  (existingData || []).forEach(function(emp) {
+    if (emp.email         && emp.email.trim())         existingEmails[emp.email.trim().toLowerCase()] = true;
+    if (emp.employee_code && emp.employee_code.trim()) existingCodes[emp.employee_code.trim()] = true;
+  });
+
+  /* First pass: collect per-value occurrence lists for in-file duplicate detection */
+  var fileEmailMap = {};
+  var fileCodeMap  = {};
+  rows.forEach(function(row, idx) {
+    var e = (row['Email']       || '').trim().toLowerCase();
+    var c = (row['Employee ID'] || '').trim();
+    if (e) { if (!fileEmailMap[e]) fileEmailMap[e] = []; fileEmailMap[e].push(idx); }
+    if (c) { if (!fileCodeMap[c])  fileCodeMap[c]  = []; fileCodeMap[c].push(idx);  }
+  });
+
+  var rowErrors = rows.map(function() { return []; });
+
+  rows.forEach(function(row, idx) {
+    var errs = rowErrors[idx];
+
+    /* Required fields */
+    if (!(row['Name']     || '').trim()) errs.push('Name is required');
+    if (!(row['Title']    || '').trim()) errs.push('Title is required');
+    if (!(row['Location'] || '').trim()) errs.push('Location is required');
+
+    /* Status: blank defaults to active; anything else must be active/inactive */
+    var rawStatus = (row['Status'] || '').trim().toLowerCase();
+    if (rawStatus === '') {
+      row['Status'] = 'active';
+    } else if (rawStatus !== 'active' && rawStatus !== 'inactive') {
+      errs.push("Status must be 'active' or 'inactive' (got: " + (row['Status'] || '') + ')');
+    }
+
+    /* Employment Type: blank defaults to full-time */
+    var rawEmpType = (row['Employment Type'] || '').trim().toLowerCase();
+    if (rawEmpType === '') {
+      row['Employment Type'] = 'full-time';
+    } else if (rawEmpType !== 'full-time' && rawEmpType !== 'part-time') {
+      errs.push("Employment Type must be 'full-time' or 'part-time' (got: " + (row['Employment Type'] || '') + ')');
+    }
+
+    /* Email */
+    var rawEmail = (row['Email'] || '').trim();
+    if (rawEmail) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
+        errs.push('Email format is invalid');
+      } else {
+        var emailKey = rawEmail.toLowerCase();
+        if (fileEmailMap[emailKey] && fileEmailMap[emailKey].length > 1) {
+          var others = fileEmailMap[emailKey].filter(function(i) { return i !== idx; })
+            .map(function(i) { return 'row ' + (i + 2); });
+          errs.push('Duplicate email in this file (also in ' + others.join(', ') + ')');
+        }
+        if (existingEmails[emailKey]) errs.push('Email already exists in the directory');
+      }
+    }
+
+    /* Hire Date */
+    var rawHire = (row['Hire Date'] || '').trim();
+    if (rawHire && isNaN(new Date(rawHire).getTime())) {
+      errs.push('Hire Date is not a valid date');
+    }
+
+    /* Employee ID */
+    var rawCode = (row['Employee ID'] || '').trim();
+    if (rawCode) {
+      if (fileCodeMap[rawCode] && fileCodeMap[rawCode].length > 1) {
+        var codeOthers = fileCodeMap[rawCode].filter(function(i) { return i !== idx; })
+          .map(function(i) { return 'row ' + (i + 2); });
+        errs.push('Duplicate Employee ID in this file (also in ' + codeOthers.join(', ') + ')');
+      }
+      if (existingCodes[rawCode]) errs.push('Employee ID already exists in the directory');
+    }
+  });
+
+  return rowErrors;
+}
+
+function renderImportPreview(rows, rowErrors) {
+  var preview    = document.getElementById('csvImportPreview');
+  var confirmBtn = document.getElementById('csvImportConfirmBtn');
+  if (!preview) return;
+
+  var totalErrors = 0;
+  rowErrors.forEach(function(e) { totalErrors += e.length; });
+  var hasErrors = totalErrors > 0;
+
+  var COLS = ['Employee ID','Name','Title','Department','Location','Status','Email','Phone','Supervisor','Hire Date','Employment Type'];
+
+  var html = '<p class="csv-import-summary">'
+    + rows.length + ' row' + (rows.length === 1 ? '' : 's') + ' ready to import, '
+    + '<span class="' + (hasErrors ? 'csv-error-count' : '') + '">'
+    + totalErrors + ' error' + (totalErrors === 1 ? '' : 's') + '</span>'
+    + '</p>';
+
+  if (hasErrors) {
+    html += '<p class="csv-import-note">Fix the errors below and re-upload. All rows must be valid to import.</p>';
+  }
+
+  html += '<div class="csv-preview-wrap"><table class="csv-preview-table"><thead><tr>';
+  COLS.forEach(function(c) { html += '<th>' + esc(c) + '</th>'; });
+  html += '<th>Issues</th></tr></thead><tbody>';
+
+  rows.forEach(function(row, idx) {
+    var errs     = rowErrors[idx];
+    var rowClass = errs.length > 0 ? 'csv-row-error' : 'csv-row-ok';
+    html += '<tr class="' + rowClass + '">';
+    COLS.forEach(function(c) { html += '<td>' + esc(row[c] || '') + '</td>'; });
+    if (errs.length > 0) {
+      html += '<td class="csv-cell-errors"><ul>';
+      errs.forEach(function(e) { html += '<li>' + esc(e) + '</li>'; });
+      html += '</ul></td>';
+    } else {
+      html += '<td class="csv-cell-ok">-</td>';
+    }
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  preview.innerHTML = html;
+
+  if (confirmBtn) confirmBtn.disabled = true;
+}
+
+function handleImportFileSelect(e) {
+  var file    = e.target.files && e.target.files[0];
+  var preview = document.getElementById('csvImportPreview');
+  if (!file) return;
+  if (preview) preview.innerHTML = '<p class="csv-loading">Parsing file...</p>';
+
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var parsed = parseCsvRobust(ev.target.result);
+
+    /* Validate required headers present */
+    var REQUIRED_HEADERS = ['Name', 'Title', 'Location'];
+    var missing = REQUIRED_HEADERS.filter(function(h) { return parsed.headers.indexOf(h) === -1; });
+    if (missing.length > 0) {
+      if (preview) preview.innerHTML = '<p class="csv-error-banner">Missing required column'
+        + (missing.length === 1 ? '' : 's') + ': '
+        + missing.map(function(h) { return esc(h); }).join(', ') + '.</p>';
+      return;
+    }
+    if (parsed.rows.length === 0) {
+      if (preview) preview.innerHTML = '<p class="csv-error-banner">The file has no data rows.</p>';
+      return;
+    }
+
+    /* Combine active and archived data for duplicate checking */
+    var existing = [];
+    if (dirData)         existing = existing.concat(dirData);
+    if (dirArchivedData) existing = existing.concat(dirArchivedData);
+
+    var rowErrors = validateImportRows(parsed.rows, existing);
+    renderImportPreview(parsed.rows, rowErrors);
+  };
+  reader.onerror = function() {
+    if (preview) preview.innerHTML = '<p class="csv-error-banner">Could not read the file.</p>';
+  };
+  reader.readAsText(file);
 }

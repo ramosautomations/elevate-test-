@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/standard/dashboard/dashboard.css?v=14">
+    <link rel="stylesheet" href="/standard/dashboard/dashboard.css?v=15">
 </head>
 <body>
 
@@ -223,6 +223,7 @@
                                 <button class="dir-seg-btn active" id="dirSegActive" onclick="switchDirView(false)">Active</button>
                                 <button class="dir-seg-btn" id="dirSegArchived" onclick="switchDirView(true)">Archived</button>
                             </div>
+                            <button class="dir-export-btn" onclick="openImportModal()">Import CSV</button>
                             <button class="dir-export-btn" onclick="exportDirCsv()">Export CSV</button>
                             <button class="dir-add-btn" id="dirAddBtn" onclick="openAddEmpModal()">
                                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -376,6 +377,38 @@
                     </div>
                 </div>
             </div>
+
+            <!-- CSV Import modal -->
+            <div class="dir-overlay" id="csvImportOverlay" onclick="closeImportModal()">
+                <div class="dir-modal dir-modal--wide" onclick="event.stopPropagation()">
+                    <div class="dir-modal-hd">
+                        <div class="dir-modal-info">
+                            <div class="dir-modal-name">Import CSV</div>
+                            <div class="dir-modal-sub">Columns are matched by header name - order does not matter.</div>
+                        </div>
+                        <button class="dir-modal-close" onclick="closeImportModal()" aria-label="Close">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="dir-modal-body">
+                        <div class="csv-upload-area">
+                            <label class="csv-file-label">
+                                Choose CSV file
+                                <input type="file" accept=".csv" id="csvFileInput" onchange="handleImportFileSelect(event)">
+                            </label>
+                            <button class="csv-template-link" onclick="downloadCsvTemplate()">Download template</button>
+                        </div>
+                        <div id="csvImportPreview"></div>
+                        <div class="form-footer">
+                            <span class="csv-import-pending">Import will be enabled once the backend endpoint is added.</span>
+                            <button type="button" class="btn-cancel" onclick="closeImportModal()">Cancel</button>
+                            <button type="button" class="btn-submit" id="csvImportConfirmBtn" disabled>Confirm Import</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section class="section" id="section-forms">
@@ -401,6 +434,6 @@
 </div><!-- .page -->
 
 <script src="/js/chart.min.js"></script>
-<script src="/standard/dashboard/dashboard.js?v=16"></script>
+<script src="/standard/dashboard/dashboard.js?v=17"></script>
 </body>
 </html>
