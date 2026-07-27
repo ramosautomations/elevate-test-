@@ -528,6 +528,82 @@ app.put('/api/employees/:id/unarchive', authenticateToken, async (req, res) => {
   }
 });
 
+app.post('/api/employees/import', authenticateToken, async (req, res) => {
+  const { employees } = req.body;
+  if (!Array.isArray(employees) || employees.length === 0) {
+    return res.status(400).json({ error: 'No employee rows provided.' });
+  }
+
+  /* Server-side validation - do not trust the client */
+  const validationErrors = [];
+  employees.forEach((emp, idx) => {
+    const errs = [];
+    if (!emp.name     || !String(emp.name).trim())     errs.push('Name is required');
+    if (!emp.title    || !String(emp.title).trim())    errs.push('Title is required');
+    if (!emp.location || !String(emp.location).trim()) errs.push('Location is required');
+    if (errs.length > 0) validationErrors.push({ row: idx + 2, errors: errs });
+  });
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ error: 'Validation failed', rowErrors: validationErrors });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    for (let i = 0; i < employees.length; i++) {
+      const emp      = employees[i];
+      const status   = (String(emp.status   || '').trim().toLowerCase()) || 'active';
+      const empType  = (String(emp.employment_type || '').trim().toLowerCase()) || 'full-time';
+      const empCode  = String(emp.employee_code || '').trim() || null;
+
+      try {
+        await client.query(`
+          INSERT INTO employees
+            (name, title, department, location, email, phone, supervisor,
+             hire_date, status, employment_type, company_id, created_by, employee_code)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        `, [
+          String(emp.name).trim(),
+          String(emp.title).trim(),
+          String(emp.department  || '').trim() || null,
+          String(emp.location).trim(),
+          String(emp.email       || '').trim() || null,
+          String(emp.phone       || '').trim() || null,
+          String(emp.supervisor  || '').trim() || null,
+          String(emp.hire_date   || '').trim() || null,
+          status,
+          empType,
+          req.user.company_id,
+          req.user.id,
+          empCode
+        ]);
+      } catch (insertErr) {
+        await client.query('ROLLBACK');
+        let msg = 'Insert failed';
+        if (insertErr.code === '23505') {
+          msg = insertErr.constraint === 'employees_employee_code_company_key'
+            ? 'Employee ID already exists in the directory'
+            : 'Email already exists in the directory';
+        }
+        return res.status(409).json({
+          error: 'Import failed due to a conflict',
+          rowErrors: [{ row: i + 2, errors: [msg] }]
+        });
+      }
+    }
+
+    await client.query('COMMIT');
+    res.json({ imported: employees.length });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    console.error('Import error:', err);
+    res.status(500).json({ error: 'Import failed' });
+  } finally {
+    client.release();
+  }
+});
+
 // Submit form and generate PDF
 const puppeteer = require('puppeteer');
 const fs = require('fs');

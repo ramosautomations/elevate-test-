@@ -402,9 +402,8 @@
                         </div>
                         <div id="csvImportPreview"></div>
                         <div class="form-footer">
-                            <span class="csv-import-pending">Import will be enabled once the backend endpoint is added.</span>
                             <button type="button" class="btn-cancel" onclick="closeImportModal()">Cancel</button>
-                            <button type="button" class="btn-submit" id="csvImportConfirmBtn" disabled>Confirm Import</button>
+                            <button type="button" class="btn-submit" id="csvImportConfirmBtn" onclick="confirmImport()" disabled>Confirm Import</button>
                         </div>
                     </div>
                 </div>
@@ -434,6 +433,6 @@
 </div><!-- .page -->
 
 <script src="/js/chart.min.js"></script>
-<script src="/standard/dashboard/dashboard.js?v=17"></script>
+<script src="/standard/dashboard/dashboard.js?v=18"></script>
 </body>
 </html>

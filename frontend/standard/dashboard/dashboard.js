@@ -1336,6 +1336,8 @@ function switchToActiveView() {
    CSV IMPORT
 ================================================================ */
 
+var csvImportRows = null; /* parsed rows held for confirmImport() */
+
 function openImportModal() {
   var overlay = document.getElementById('csvImportOverlay');
   if (!overlay) return;
@@ -1343,6 +1345,9 @@ function openImportModal() {
   if (fileInput) fileInput.value = '';
   var preview = document.getElementById('csvImportPreview');
   if (preview) preview.innerHTML = '';
+  var confirmBtn = document.getElementById('csvImportConfirmBtn');
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'Confirm Import'; }
+  csvImportRows = null;
   overlay.classList.add('open');
 }
 
@@ -1501,6 +1506,8 @@ function renderImportPreview(rows, rowErrors) {
   var confirmBtn = document.getElementById('csvImportConfirmBtn');
   if (!preview) return;
 
+  csvImportRows = rows; /* store for confirmImport() */
+
   var totalErrors = 0;
   rowErrors.forEach(function(e) { totalErrors += e.length; });
   var hasErrors = totalErrors > 0;
@@ -1539,7 +1546,7 @@ function renderImportPreview(rows, rowErrors) {
   html += '</tbody></table></div>';
   preview.innerHTML = html;
 
-  if (confirmBtn) confirmBtn.disabled = true;
+  if (confirmBtn) confirmBtn.disabled = hasErrors;
 }
 
 function handleImportFileSelect(e) {
@@ -1578,4 +1585,78 @@ function handleImportFileSelect(e) {
     if (preview) preview.innerHTML = '<p class="csv-error-banner">Could not read the file.</p>';
   };
   reader.readAsText(file);
+}
+
+function confirmImport() {
+  var confirmBtn = document.getElementById('csvImportConfirmBtn');
+  var preview    = document.getElementById('csvImportPreview');
+  if (!csvImportRows || csvImportRows.length === 0) return;
+
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'Importing...'; }
+
+  /* Map CSV column names to backend field names */
+  var payload = csvImportRows.map(function(row) {
+    return {
+      employee_code:   (row['Employee ID']    || '').trim() || null,
+      name:            (row['Name']           || '').trim(),
+      title:           (row['Title']          || '').trim(),
+      department:      (row['Department']     || '').trim() || null,
+      location:        (row['Location']       || '').trim(),
+      status:          (row['Status']         || 'active').trim().toLowerCase(),
+      email:           (row['Email']          || '').trim() || null,
+      phone:           (row['Phone']          || '').trim() || null,
+      supervisor:      (row['Supervisor']     || '').trim() || null,
+      hire_date:       (row['Hire Date']      || '').trim() || null,
+      employment_type: (row['Employment Type']|| 'full-time').trim().toLowerCase()
+    };
+  });
+
+  apiFetch('/api/employees/import', {
+    method:      'POST',
+    credentials: 'include',
+    headers:     { 'Content-Type': 'application/json' },
+    body:        JSON.stringify({ employees: payload })
+  })
+  .then(function(res) {
+    if (!res) return null; /* 401: redirect in progress */
+    return res.json().then(function(data) { return { status: res.status, data: data }; });
+  })
+  .then(function(r) {
+    if (!r) return;
+    if (r.status === 200) {
+      closeImportModal();
+      dirFetched = false;
+      dirData    = null;
+      var sl = document.getElementById('dirFilterLoc');    if (sl) sl.value = '';
+      var ss = document.getElementById('dirFilterStatus'); if (ss) ss.value = '';
+      var si = document.getElementById('dirSearch');       if (si) si.value = '';
+      switchToActiveView();
+      initDirectory();
+      var n = r.data.imported;
+      showDirSuccessBanner('Imported ' + n + ' employee' + (n === 1 ? '' : 's') + '.');
+    } else if (r.status === 400 || r.status === 409) {
+      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Confirm Import'; }
+      var errHtml = '';
+      if (r.data && r.data.rowErrors && r.data.rowErrors.length > 0) {
+        errHtml = '<p class="csv-error-banner">Import failed. Fix the issues below and re-upload.</p>'
+          + '<ul class="csv-cell-errors" style="padding-left:18px;margin:0 0 10px">';
+        r.data.rowErrors.forEach(function(re) {
+          re.errors.forEach(function(msg) {
+            errHtml += '<li>Row ' + re.row + ': ' + esc(msg) + '</li>';
+          });
+        });
+        errHtml += '</ul>';
+      } else {
+        errHtml = '<p class="csv-error-banner">' + esc((r.data && r.data.error) || 'Import failed.') + '</p>';
+      }
+      if (preview) preview.innerHTML = errHtml + preview.innerHTML;
+    } else {
+      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Confirm Import'; }
+      if (preview) preview.innerHTML = '<p class="csv-error-banner">Something went wrong. Please try again.</p>' + preview.innerHTML;
+    }
+  })
+  .catch(function() {
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Confirm Import'; }
+    if (preview) preview.innerHTML = '<p class="csv-error-banner">Network error. Please try again.</p>' + preview.innerHTML;
+  });
 }
