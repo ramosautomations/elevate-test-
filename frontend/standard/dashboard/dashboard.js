@@ -359,6 +359,8 @@ var dirDocsLoaded    = false; /* true once docs have been fetched for dirCurrent
 var dirSortKey       = 'name'; /* active sort column */
 var dirSortDir       = 'asc';  /* 'asc' | 'desc' */
 var dirVisibleData   = null;   /* last rendered set - used by CSV export */
+var dirSelected      = {};     /* empId -> true for bulk-selected rows */
+var dirBulkInFlight  = false;  /* true while bulk requests are in flight */
 
 function initDirectory() {
   if (dirFetched) {
@@ -527,7 +529,10 @@ function renderDirTable(employees) {
       statusCell = '<span class="dir-status"><span class="dir-dot ' + dotClass + '"></span>' + esc(statusLbl) + '</span>';
     }
 
-    return '<tr class="dir-row" onclick="openDirModal(' + emp.id + ')">'
+    var cbChecked = dirSelected[emp.id] ? ' checked' : '';
+    var rowClass  = 'dir-row' + (dirSelected[emp.id] ? ' dir-row-selected' : '');
+    return '<tr class="' + rowClass + '" id="dir-row-' + emp.id + '" onclick="openDirModal(' + emp.id + ')">'
+      + '<td class="dir-td-cb" onclick="event.stopPropagation()"><input type="checkbox" id="dir-cb-' + emp.id + '" onchange="dirToggleSelect(' + emp.id + ')"' + cbChecked + '></td>'
       + '<td><div class="dir-row-avatar">' + personIcon + '</div></td>'
       + '<td class="dir-emp-code">' + esc(emp.employee_code || '--') + '</td>'
       + '<td class="dir-name">' + esc(emp.name || '--') + '</td>'
@@ -542,6 +547,7 @@ function renderDirTable(employees) {
   var statusKey = dirViewArchived ? 'archived_at' : 'status';
   body.innerHTML = '<div class="dir-table-wrap"><table class="dir-table">'
     + '<thead><tr>'
+    + '<th class="dir-th-cb"><input type="checkbox" id="dirSelectAll" onchange="dirToggleSelectAll()"></th>'
     + '<th></th>'
     + dirSortTh('ID', 'employee_code')
     + dirSortTh('Name', 'name')
@@ -553,6 +559,15 @@ function renderDirTable(employees) {
     + '</tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table></div>';
+
+  /* Set header checkbox indeterminate state (cannot be set via HTML attribute) */
+  var hcb = document.getElementById('dirSelectAll');
+  if (hcb) {
+    var anySelected = sorted.some(function(e) { return dirSelected[e.id]; });
+    var allSelected = sorted.length > 0 && sorted.every(function(e) { return dirSelected[e.id]; });
+    hcb.indeterminate = anySelected && !allSelected;
+  }
+  renderBulkBar();
 }
 
 /* ---- CSV Export ---- */
@@ -1241,7 +1256,8 @@ function switchDirView(toArchived) {
   if (addBtn) addBtn.style.display = toArchived ? 'none' : '';
   if (notice) notice.style.display = toArchived ? '' : 'none';
 
-  /* Reset search/filters on view switch */
+  /* Reset search/filters and selection on view switch */
+  clearDirSelection();
   var sl = document.getElementById('dirFilterLoc');    if (sl) sl.value = '';
   var ss = document.getElementById('dirFilterStatus'); if (ss) ss.value = '';
   var si = document.getElementById('dirSearch');       if (si) si.value = '';
@@ -1585,6 +1601,330 @@ function handleImportFileSelect(e) {
     if (preview) preview.innerHTML = '<p class="csv-error-banner">Could not read the file.</p>';
   };
   reader.readAsText(file);
+}
+
+/* ================================================================
+   BULK ACTIONS
+================================================================ */
+
+function getSelectedIds() {
+  return Object.keys(dirSelected).filter(function(k) { return dirSelected[k]; });
+}
+
+function clearDirSelection() {
+  dirSelected = {};
+  var bar = document.getElementById('dirBulkBar');
+  if (bar) bar.style.display = 'none';
+  /* Clear checkboxes and selected row highlights */
+  var visible = dirVisibleData || [];
+  visible.forEach(function(emp) {
+    var cb  = document.getElementById('dir-cb-' + emp.id);
+    if (cb)  cb.checked = false;
+    var row = document.getElementById('dir-row-' + emp.id);
+    if (row) row.classList.remove('dir-row-selected');
+  });
+  var hcb = document.getElementById('dirSelectAll');
+  if (hcb) { hcb.checked = false; hcb.indeterminate = false; }
+}
+
+function dirToggleSelect(empId) {
+  if (dirSelected[empId]) {
+    delete dirSelected[empId];
+  } else {
+    dirSelected[empId] = true;
+  }
+  updateBulkUI();
+}
+
+function dirToggleSelectAll() {
+  var visible    = dirVisibleData || [];
+  var allChecked = visible.length > 0 && visible.every(function(e) { return dirSelected[e.id]; });
+  if (allChecked) {
+    visible.forEach(function(e) { delete dirSelected[e.id]; });
+  } else {
+    visible.forEach(function(e) { dirSelected[e.id] = true; });
+  }
+  updateBulkUI();
+}
+
+function updateBulkUI() {
+  var visible = dirVisibleData || [];
+
+  visible.forEach(function(emp) {
+    var cb  = document.getElementById('dir-cb-' + emp.id);
+    if (cb)  cb.checked = !!dirSelected[emp.id];
+    var row = document.getElementById('dir-row-' + emp.id);
+    if (row) row.classList.toggle('dir-row-selected', !!dirSelected[emp.id]);
+  });
+
+  var hcb = document.getElementById('dirSelectAll');
+  if (hcb) {
+    var anyChecked = visible.some(function(e) { return dirSelected[e.id]; });
+    var allChecked = visible.length > 0 && visible.every(function(e) { return dirSelected[e.id]; });
+    hcb.checked       = allChecked;
+    hcb.indeterminate = anyChecked && !allChecked;
+  }
+
+  renderBulkBar();
+}
+
+function renderBulkBar() {
+  var bar = document.getElementById('dirBulkBar');
+  if (!bar) return;
+  var ids = getSelectedIds();
+  if (ids.length === 0) { bar.style.display = 'none'; return; }
+
+  var locs = [];
+  var data = getCurrentDirData();
+  if (data) {
+    data.forEach(function(e) {
+      if (e.location && locs.indexOf(e.location) === -1) locs.push(e.location);
+    });
+    locs.sort();
+  }
+  var locOpts = locs.map(function(l) {
+    return '<option value="' + esc(l) + '">';
+  }).join('');
+
+  var actionsHtml;
+  if (dirViewArchived) {
+    actionsHtml = '<button class="bulk-apply-btn" onclick="bulkUnarchive()">Unarchive Selected</button>';
+  } else {
+    actionsHtml = '<div class="bulk-group">'
+      + '<input class="form-input bulk-loc-input" type="text" id="bulkLocInput"'
+      + ' list="bulkLocOptions" placeholder="New location..." autocomplete="off">'
+      + '<datalist id="bulkLocOptions">' + locOpts + '</datalist>'
+      + '<button class="bulk-apply-btn" onclick="bulkChangeLocation()">Change Location</button>'
+      + '</div>'
+      + '<div class="bulk-sep"></div>'
+      + '<div class="bulk-group">'
+      + '<select class="form-input bulk-status-sel" id="bulkStatusSel">'
+      + '<option value="active">Active</option>'
+      + '<option value="inactive">Inactive</option>'
+      + '</select>'
+      + '<button class="bulk-apply-btn" onclick="bulkSetStatus()">Set Status</button>'
+      + '</div>'
+      + '<div class="bulk-sep"></div>'
+      + '<button class="bulk-archive-btn" onclick="bulkArchive()">Archive Selected</button>';
+  }
+
+  var html = '<div class="bulk-left">'
+    + '<span class="bulk-count">' + ids.length + ' selected</span>'
+    + '<button class="bulk-clear-btn" onclick="clearDirSelection()">Clear</button>'
+    + '</div>'
+    + '<div class="bulk-actions">'
+    + actionsHtml
+    + '</div>';
+  bar.style.display = '';
+  bar.innerHTML = html;
+
+  if (dirBulkInFlight) {
+    var elems = bar.querySelectorAll('button, input, select');
+    for (var i = 0; i < elems.length; i++) { elems[i].disabled = true; }
+  }
+}
+
+/* Pass all existing fields through; override only what changed (full-replace PUT). */
+function buildEmpPayload(emp, overrides) {
+  var p = {
+    name:             emp.name             || '',
+    title:            emp.title            || '',
+    department:       emp.department       || null,
+    location:         emp.location         || '',
+    email:            emp.email            || null,
+    phone:            emp.phone            || null,
+    supervisor:       emp.supervisor       || null,
+    hire_date:        emp.hire_date ? String(emp.hire_date).split('T')[0] : null,
+    status:           emp.status           || 'active',
+    employment_type:  emp.employment_type  || 'full-time',
+    pay_type:         emp.pay_type         || 'hourly',
+    pay_amount:       emp.pay_amount       != null ? emp.pay_amount : null,
+    termination_date: emp.termination_date || null,
+    employee_code:    emp.employee_code    || null
+  };
+  if (overrides) {
+    Object.keys(overrides).forEach(function(k) { p[k] = overrides[k]; });
+  }
+  return p;
+}
+
+function setBulkInFlight(state) {
+  dirBulkInFlight = state;
+  renderBulkBar();
+}
+
+function showDirBanner(type, msg) {
+  var el = document.getElementById('dirBanner');
+  if (!el) return;
+  el.className = 'form-banner' + (type ? ' banner-' + type : '');
+  el.textContent = msg;
+  setTimeout(function() {
+    if (el) { el.className = 'form-banner'; el.textContent = ''; }
+  }, 5000);
+}
+
+function bulkChangeLocation() {
+  var input  = document.getElementById('bulkLocInput');
+  var newLoc = input ? input.value.trim() : '';
+  if (!newLoc) {
+    if (input) { input.focus(); input.style.outline = '2px solid #dc2626'; }
+    return;
+  }
+
+  var ids  = getSelectedIds();
+  var data = getCurrentDirData();
+  if (!ids.length || !data) return;
+
+  setBulkInFlight(true);
+
+  var promises = ids.map(function(empId) {
+    var emp = null;
+    for (var i = 0; i < data.length; i++) {
+      if (String(data[i].id) === String(empId)) { emp = data[i]; break; }
+    }
+    if (!emp) return Promise.resolve({ ok: false });
+    return apiFetch('/api/employees/' + empId, {
+      method:      'PUT',
+      credentials: 'include',
+      headers:     { 'Content-Type': 'application/json' },
+      body:        JSON.stringify(buildEmpPayload(emp, { location: newLoc }))
+    }).then(function(res) {
+      return { ok: res && res.ok };
+    }).catch(function() { return { ok: false }; });
+  });
+
+  Promise.all(promises).then(function(results) {
+    setBulkInFlight(false);
+    var ok  = results.filter(function(r) { return r.ok; }).length;
+    var bad = results.length - ok;
+    clearDirSelection();
+    dirFetched = false; dirData = null;
+    initDirectory();
+    var msg = 'Updated ' + ok + ' employee' + (ok !== 1 ? 's' : '');
+    if (bad > 0) msg += ', ' + bad + ' failed';
+    showDirSuccessBanner(msg + '.');
+  });
+}
+
+function bulkSetStatus() {
+  var sel       = document.getElementById('bulkStatusSel');
+  var newStatus = sel ? sel.value : 'active';
+
+  var ids  = getSelectedIds();
+  var data = getCurrentDirData();
+  if (!ids.length || !data) return;
+
+  setBulkInFlight(true);
+
+  var promises = ids.map(function(empId) {
+    var emp = null;
+    for (var i = 0; i < data.length; i++) {
+      if (String(data[i].id) === String(empId)) { emp = data[i]; break; }
+    }
+    if (!emp) return Promise.resolve({ ok: false });
+    return apiFetch('/api/employees/' + empId, {
+      method:      'PUT',
+      credentials: 'include',
+      headers:     { 'Content-Type': 'application/json' },
+      body:        JSON.stringify(buildEmpPayload(emp, { status: newStatus }))
+    }).then(function(res) {
+      return { ok: res && res.ok };
+    }).catch(function() { return { ok: false }; });
+  });
+
+  Promise.all(promises).then(function(results) {
+    setBulkInFlight(false);
+    var ok  = results.filter(function(r) { return r.ok; }).length;
+    var bad = results.length - ok;
+    clearDirSelection();
+    dirFetched = false; dirData = null;
+    initDirectory();
+    var msg = 'Updated ' + ok + ' employee' + (ok !== 1 ? 's' : '');
+    if (bad > 0) msg += ', ' + bad + ' failed';
+    showDirSuccessBanner(msg + '.');
+  });
+}
+
+function bulkArchive() {
+  var ids  = getSelectedIds();
+  var data = getCurrentDirData();
+  if (!ids.length || !data) return;
+
+  var activeIds  = [];
+  var archiveIds = [];
+  ids.forEach(function(empId) {
+    var emp = null;
+    for (var i = 0; i < data.length; i++) {
+      if (String(data[i].id) === String(empId)) { emp = data[i]; break; }
+    }
+    if (emp && emp.status === 'active') {
+      activeIds.push(empId);
+    } else {
+      archiveIds.push(empId);
+    }
+  });
+
+  if (archiveIds.length === 0) {
+    showDirBanner('error',
+      activeIds.length + ' selected employee' + (activeIds.length !== 1 ? 's are' : ' is')
+      + ' Active and cannot be archived. Set to Inactive first.');
+    return;
+  }
+
+  setBulkInFlight(true);
+
+  var promises = archiveIds.map(function(empId) {
+    return apiFetch('/api/employees/' + empId + '/archive', {
+      method:      'PUT',
+      credentials: 'include'
+    }).then(function(res) {
+      return { ok: res && res.ok };
+    }).catch(function() { return { ok: false }; });
+  });
+
+  Promise.all(promises).then(function(results) {
+    setBulkInFlight(false);
+    var ok  = results.filter(function(r) { return r.ok; }).length;
+    var bad = results.length - ok;
+    clearDirSelection();
+    dirFetched = false; dirData = null;
+    dirArchivedFetched = false; dirArchivedData = null;
+    switchToActiveView();
+    initDirectory();
+    var msg = 'Archived ' + ok;
+    if (activeIds.length > 0) msg += ', skipped ' + activeIds.length + ' Active';
+    if (bad > 0) msg += ', ' + bad + ' failed';
+    showDirSuccessBanner(msg + '.');
+  });
+}
+
+function bulkUnarchive() {
+  var ids = getSelectedIds();
+  if (!ids.length) return;
+
+  setBulkInFlight(true);
+
+  var promises = ids.map(function(empId) {
+    return apiFetch('/api/employees/' + empId + '/unarchive', {
+      method:      'PUT',
+      credentials: 'include'
+    }).then(function(res) {
+      return { ok: res && res.ok };
+    }).catch(function() { return { ok: false }; });
+  });
+
+  Promise.all(promises).then(function(results) {
+    setBulkInFlight(false);
+    var ok  = results.filter(function(r) { return r.ok; }).length;
+    var bad = results.length - ok;
+    clearDirSelection();
+    dirArchivedFetched = false; dirArchivedData = null;
+    dirFetched = false; dirData = null;
+    initArchivedDirectory();
+    var msg = 'Unarchived ' + ok + ' employee' + (ok !== 1 ? 's' : '');
+    if (bad > 0) msg += ', ' + bad + ' failed';
+    showDirSuccessBanner(msg + '.');
+  });
 }
 
 function confirmImport() {
