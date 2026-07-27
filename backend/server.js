@@ -485,6 +485,49 @@ app.delete('/api/employees/:id', authenticateToken, async (req, res) => {
   }
 });
 
+app.put('/api/employees/:id/archive', authenticateToken, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, status FROM employees WHERE id = $1 AND company_id = $2',
+      [req.params.id, req.user.company_id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+    if (rows[0].status === 'active') {
+      return res.status(400).json({ error: 'Set the employee to Inactive before archiving.' });
+    }
+    const { rows: updated } = await pool.query(
+      'UPDATE employees SET archived_at = NOW() WHERE id = $1 AND company_id = $2 RETURNING id, archived_at',
+      [req.params.id, req.user.company_id]
+    );
+    res.json({ id: updated[0].id, archived_at: updated[0].archived_at });
+  } catch (err) {
+    console.error('Archive employee error:', err);
+    res.status(500).json({ error: 'Failed to archive employee' });
+  }
+});
+
+app.put('/api/employees/:id/unarchive', authenticateToken, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id FROM employees WHERE id = $1 AND company_id = $2',
+      [req.params.id, req.user.company_id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+    const { rows: updated } = await pool.query(
+      'UPDATE employees SET archived_at = NULL WHERE id = $1 AND company_id = $2 RETURNING id',
+      [req.params.id, req.user.company_id]
+    );
+    res.json({ id: updated[0].id });
+  } catch (err) {
+    console.error('Unarchive employee error:', err);
+    res.status(500).json({ error: 'Failed to unarchive employee' });
+  }
+});
+
 // Submit form and generate PDF
 const puppeteer = require('puppeteer');
 const fs = require('fs');
